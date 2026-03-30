@@ -1,8 +1,12 @@
 import { createClient } from '@supabase/supabase-js';
 import { Item } from '../../types';
 
-const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
-const supabaseKey = import.meta.env.VITE_SUPABASE_PUBLISHABLE_DEFAULT_KEY;
+const rawUrl = import.meta.env.VITE_SUPABASE_URL;
+const rawKey = import.meta.env.VITE_SUPABASE_PUBLISHABLE_DEFAULT_KEY;
+
+// Sanitize the URL and Key to remove any accidental whitespace or quotes from env vars
+const supabaseUrl = rawUrl ? rawUrl.trim().replace(/^["']|["']$/g, '') : '';
+const supabaseKey = rawKey ? rawKey.trim().replace(/^["']|["']$/g, '') : '';
 
 if (!supabaseUrl || !supabaseKey) {
   console.error('Supabase URL or Key is missing. Please set VITE_SUPABASE_URL and VITE_SUPABASE_PUBLISHABLE_DEFAULT_KEY in your environment variables.');
@@ -11,12 +15,14 @@ if (!supabaseUrl || !supabaseKey) {
 }
 
 // Ensure we have a valid URL before calling createClient to avoid the "Invalid supabaseUrl" error
-export const supabase = (supabaseUrl && supabaseKey) 
+export const supabase = (supabaseUrl && supabaseKey && supabaseUrl.startsWith('http')) 
   ? createClient(supabaseUrl, supabaseKey) 
   : null;
 
 if (supabase) {
   console.log("SUPABASE_CONNECTED");
+} else if (supabaseUrl && !supabaseUrl.startsWith('http')) {
+  console.error(`Invalid Supabase URL format: ${supabaseUrl}. Must start with http:// or https://`);
 }
 
 export const auth = supabase?.auth;
