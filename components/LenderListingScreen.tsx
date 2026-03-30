@@ -1,5 +1,6 @@
 import React, { useState, useRef } from 'react';
 import { ItemCategory, Profile } from '../types';
+import { createItem } from '../src/lib/supabase';
 
 interface LenderListingScreenProps {
   currentUser: Profile;
@@ -55,14 +56,24 @@ export const LenderListingScreen: React.FC<LenderListingScreenProps> = ({ curren
     setUploading(true);
 
     try {
-      // Logic to insert into Supabase would go here
-      // const blockedArray = Array.from(blockedDates);
-      // await supabase.from('items').insert({ ... })
+      await createItem({
+        owner_id: currentUser.id,
+        title,
+        description,
+        category,
+        price_per_day: parseFloat(price),
+        currency: 'USD',
+        image_url: images[0] || 'https://picsum.photos/seed/item/800/600',
+        availability_status: 'AVAILABLE',
+        quantity: 1,
+        latitude: 11.5564, // Default to Phnom Penh
+        longitude: 104.9282
+      });
       
-      await new Promise(resolve => setTimeout(resolve, 1500));
       alert("Item listed successfully!");
       onSuccess();
     } catch (e) {
+      console.error("Error listing item", e);
       alert("Error listing item");
     } finally {
       setUploading(false);

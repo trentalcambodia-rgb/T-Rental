@@ -1,5 +1,6 @@
 import React, { useState, useRef } from 'react';
 import { ItemCategory, UserRole } from '../types';
+import { createItem, auth } from '../src/lib/supabase';
 
 interface ShopAddItemScreenProps {
   onCancel: () => void;
@@ -41,47 +42,25 @@ export const ShopAddItemScreen: React.FC<ShopAddItemScreenProps> = ({ onCancel, 
   const handleSubmit = async () => {
     if (!title || !price) return alert("Please fill in required fields");
     
+    const user = auth.currentUser;
+    if (!user) return alert("Please sign in to list items");
+
     setUploading(true);
 
     try {
-      // --- SUPABASE INTEGRATION LOGIC ---
-      /*
-      // 1. Upload Images
-      const imageUrls = [];
-      for (const imageFile of selectedFiles) {
-         const fileExt = imageFile.name.split('.').pop();
-         const fileName = `${Math.random()}.${fileExt}`;
-         const { data, error } = await supabase.storage
-            .from('item-images')
-            .upload(fileName, imageFile);
-         
-         if (data) {
-            const { data: { publicUrl } } = supabase.storage
-                .from('item-images')
-                .getPublicUrl(fileName);
-            imageUrls.push(publicUrl);
-         }
-      }
-
-      // 2. Insert Item
-      const { error } = await supabase
-        .from('items')
-        .insert({
-           owner_id: supabase.auth.user().id,
-           title: title,
-           description: description,
-           category: category,
-           price_per_day: parseFloat(price),
-           quantity: stock,
-           image_url: imageUrls[0], // Main image
-           availability_status: 'AVAILABLE',
-           is_instant_rent: instantRent, // Assuming field exists
-           condition_metadata: conditions // Assuming JSONB field
-        });
-      */
+      await createItem({
+        owner_id: user.id,
+        title,
+        description,
+        category,
+        price_per_day: parseFloat(price),
+        image_url: images[0] || `https://picsum.photos/seed/${title}/800/600`,
+        availability_status: 'AVAILABLE',
+        quantity: stock,
+        location_lat: 11.5564, // Default Phnom Penh
+        location_lng: 104.9282
+      });
       
-      // Simulate network delay
-      await new Promise(resolve => setTimeout(resolve, 1500));
       alert("Item Listed Successfully!");
       onSuccess();
 

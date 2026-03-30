@@ -1,6 +1,7 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Booking, BookingStatus } from '../types';
 import { BookingRequestCard, RenterRiskProfile } from './BookingRequestCard';
+import { getBookings, auth } from '../src/lib/supabase';
 
 // MOCK DATA for Renters (Typically fetched from DB)
 const MOCK_RENTERS: Record<string, RenterRiskProfile> = {
@@ -33,31 +34,28 @@ const MOCK_RENTERS: Record<string, RenterRiskProfile> = {
 };
 
 export const LenderRequestsScreen: React.FC = () => {
-   // Initial Mock Requests
-   const [requests, setRequests] = useState<Booking[]>([
-    {
-      id: 'req_1',
-      renter_id: 'u_dara',
-      item_id: '1',
-      item_title: 'Honda Dream 2023',
-      start_date: new Date(Date.now() + 86400000).toISOString(),
-      end_date: new Date(Date.now() + 86400000 * 4).toISOString(),
-      total_price: 24,
-      status: BookingStatus.REQUESTED,
-      created_at: new Date().toISOString()
-    },
-    {
-      id: 'req_2',
-      renter_id: 'u_vibol',
-      item_id: '1',
-      item_title: 'Honda Dream 2023',
-      start_date: new Date(Date.now() + 86400000 * 10).toISOString(),
-      end_date: new Date(Date.now() + 86400000 * 12).toISOString(),
-      total_price: 16,
-      status: BookingStatus.REQUESTED,
-      created_at: new Date().toISOString()
-    }
-  ]);
+   const [requests, setRequests] = useState<Booking[]>([]);
+   const [loading, setLoading] = useState(true);
+
+   useEffect(() => {
+     const fetchRequests = async () => {
+       const user = auth.currentUser;
+       if (!user) return;
+
+       try {
+         // In a real app, we'd filter by owner_id on the server
+         const data = await getBookings();
+         // Filter for REQUESTED status
+         setRequests(data.filter(b => b.status === BookingStatus.REQUESTED));
+       } catch (error) {
+         console.error('Error fetching requests:', error);
+       } finally {
+         setLoading(false);
+       }
+     };
+
+     fetchRequests();
+   }, []);
 
   const removeRequest = (id: string) => {
     setRequests(prev => prev.filter(r => r.id !== id));

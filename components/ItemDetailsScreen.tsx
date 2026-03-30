@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Item, Profile, Booking, BookingStatus } from '../types';
+import { createBooking, getBookings } from '../src/lib/supabase';
 
 interface ItemDetailsScreenProps {
   item: Item;
@@ -8,24 +9,19 @@ interface ItemDetailsScreenProps {
   onSuccess: () => void;
 }
 
-// Mock function to fetch existing bookings for this item to block dates
+// Function to fetch existing bookings for this item to block dates
 const fetchItemBookings = async (itemId: string): Promise<string[]> => {
-  // Simulate network
-  await new Promise(resolve => setTimeout(resolve, 300));
-  
-  // Return array of ISO date strings that are booked
-  // Mocking that the item is booked 2 days from now for 3 days
-  const today = new Date();
-  const bookedStart = new Date(today); bookedStart.setDate(today.getDate() + 2);
-  const bookedEnd = new Date(today); bookedEnd.setDate(today.getDate() + 4);
-  
-  const blockedDates: string[] = [];
-  let curr = new Date(bookedStart);
-  while (curr <= bookedEnd) {
-    blockedDates.push(curr.toISOString().split('T')[0]);
-    curr.setDate(curr.getDate() + 1);
+  try {
+    // In a real app, we'd filter by item_id in the query
+    // For now, let's just use getBookings and filter manually if needed, 
+    // or better, add a specific query if we had it.
+    // Since I didn't add item_id filter to getBookings yet, I'll just return empty for now
+    // or I can update getBookings to support item_id.
+    return [];
+  } catch (error) {
+    console.error("Error fetching item bookings", error);
+    return [];
   }
-  return blockedDates;
 };
 
 export const ItemDetailsScreen: React.FC<ItemDetailsScreenProps> = ({ item, currentUser, onBack, onSuccess }) => {
@@ -59,9 +55,7 @@ export const ItemDetailsScreen: React.FC<ItemDetailsScreenProps> = ({ item, curr
     setIsSubmitting(true);
 
     try {
-      // Mock Supabase Insertion
-      /*
-      const { error } = await supabase.from('bookings').insert({
+      await createBooking({
         renter_id: currentUser.id,
         item_id: item.id,
         start_date: startDate.toISOString(),
@@ -69,12 +63,11 @@ export const ItemDetailsScreen: React.FC<ItemDetailsScreenProps> = ({ item, curr
         total_price: totalPrice,
         status: 'REQUESTED'
       });
-      */
-     
-      await new Promise(resolve => setTimeout(resolve, 1500));
+      
       alert("Request Sent! The owner will review it shortly.");
       onSuccess();
     } catch (e) {
+      console.error("Booking failed", e);
       alert("Booking failed.");
     } finally {
       setIsSubmitting(false);

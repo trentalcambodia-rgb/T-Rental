@@ -1,61 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Booking, BookingStatus } from '../types';
-
-// --- MOCK DATA SERVICE ---
-const fetchMyBookings = async (userId: string): Promise<Booking[]> => {
-  await new Promise(resolve => setTimeout(resolve, 500));
-  
-  const now = new Date();
-  const tomorrow = new Date(now); tomorrow.setDate(now.getDate() + 1);
-  const past = new Date(now); past.setDate(now.getDate() - 5);
-
-  return [
-    {
-      id: 'b_active_1',
-      renter_id: userId,
-      item_id: 'i1',
-      item_title: 'Honda Dream 2023',
-      start_date: new Date(now.getTime() - 86400000).toISOString(), // Started yesterday
-      end_date: new Date(now.getTime() + 172800000).toISOString(), // Ends in 2 days
-      total_price: 24,
-      status: BookingStatus.PICKED_UP,
-      created_at: past.toISOString()
-    },
-    {
-      id: 'b_pending_1',
-      renter_id: userId,
-      item_id: 'i2',
-      item_title: 'Canon 5D Mark IV',
-      start_date: tomorrow.toISOString(),
-      end_date: new Date(tomorrow.getTime() + 86400000).toISOString(),
-      total_price: 35,
-      status: BookingStatus.REQUESTED,
-      created_at: now.toISOString()
-    },
-    {
-      id: 'b_hist_1',
-      renter_id: userId,
-      item_id: 'i3',
-      item_title: 'Camping Set',
-      start_date: past.toISOString(),
-      end_date: new Date(past.getTime() + 86400000).toISOString(),
-      total_price: 15,
-      status: BookingStatus.COMPLETED,
-      created_at: past.toISOString()
-    },
-    {
-      id: 'b_hist_2',
-      renter_id: userId,
-      item_id: 'i4',
-      item_title: 'Drill Set',
-      start_date: past.toISOString(),
-      end_date: past.toISOString(),
-      total_price: 5,
-      status: BookingStatus.CANCELLED,
-      created_at: past.toISOString()
-    }
-  ];
-};
+import { getBookings, auth } from '../src/lib/supabase';
 
 type TabType = 'PENDING' | 'ACTIVE' | 'HISTORY';
 
@@ -65,16 +10,27 @@ export const MyRentalsScreen: React.FC = () => {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    fetchMyBookings('u1').then(data => {
-      setBookings(data);
-      setLoading(false);
-    });
+    const fetchBookings = async () => {
+      const user = auth.currentUser;
+      if (!user) return;
+
+      try {
+        const data = await getBookings({ renter_id: user.id });
+        setBookings(data);
+      } catch (error) {
+        console.error('Error fetching bookings:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchBookings();
   }, []);
 
   // Filter Logic
   const filteredBookings = bookings.filter(b => {
     if (activeTab === 'PENDING') return b.status === BookingStatus.REQUESTED;
-    if (activeTab === 'ACTIVE') return [BookingStatus.APPROVED, BookingStatus.PICKED_UP, BookingStatus.APPROVED].includes(b.status);
+    if (activeTab === 'ACTIVE') return [BookingStatus.APPROVED, BookingStatus.PICKED_UP, BookingStatus.CONFIRMED].includes(b.status);
     if (activeTab === 'HISTORY') return [BookingStatus.COMPLETED, BookingStatus.RETURNED, BookingStatus.CANCELLED, BookingStatus.DISPUTED].includes(b.status);
     return false;
   });

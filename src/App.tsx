@@ -13,38 +13,8 @@ import { ShopInventoryScreen } from '../components/ShopInventoryScreen';
 import { AdminDashboardScreen } from '../components/AdminDashboardScreen';
 import { ShopAddItemScreen } from '../components/ShopAddItemScreen';
 import { LenderListingScreen } from '../components/LenderListingScreen';
-import { auth, signInWithGoogle, logout as firebaseLogout } from './firebase';
-import { onAuthStateChanged, User } from 'firebase/auth';
-
-// --- MOCK DATA ---
-const MOCK_PROFILE: Profile = {
-  id: 'u1',
-  email: 't.rental.cambodia@gmail.com',
-  full_name: 'T-Rental User',
-  avatar_url: 'https://picsum.photos/150',
-  t_points: 85,
-  tier: 'SILVER',
-  is_verified: true,
-  created_at: new Date().toISOString()
-};
-
-const ITEMS: Item[] = [
-  {
-    id: '1',
-    owner_id: 'u2',
-    title: 'Honda Dream 2023',
-    description: 'Perfect condition, includes 2 helmets. Ideal for city traffic.',
-    category: ItemCategory.VEHICLE,
-    price_per_day: 8,
-    currency: 'USD',
-    image_url: 'https://images.unsplash.com/photo-1558981403-c5f9899a28bc?auto=format&fit=crop&w=800&q=80',
-    latitude: 11.5564,
-    longitude: 104.9282,
-    availability_status: 'AVAILABLE',
-    rating_avg: 4.8,
-    quantity: 2
-  }
-];
+import { supabase, signInWithGoogle, signOut as supabaseSignOut, getProfile, createProfile, getItems } from './lib/supabase';
+import { User, Session } from '@supabase/supabase-js';
 
 // --- SIGN IN SCREEN ---
 const SignInScreen = () => {
@@ -91,7 +61,7 @@ const SignInScreen = () => {
 const ProfileScreen = ({ user, userRole, onRoleChange }: { user: Profile, userRole: UserRole, onRoleChange: (role: UserRole) => void }) => {
   const handleLogout = async () => {
     try {
-      await firebaseLogout();
+      await supabaseSignOut();
     } catch (error) {
       console.error("Logout failed", error);
     }
@@ -157,15 +127,74 @@ export default function App() {
   const [isOffline, setIsOffline] = useState(!navigator.onLine);
   
   const [user, setUser] = useState<User | null>(null);
+  const [profile, setProfile] = useState<Profile | null>(null);
   const [isAuthReady, setIsAuthReady] = useState(false);
+  const [items, setItems] = useState<Item[]>([]);
 
   useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
-      setUser(currentUser);
+    // Check current session
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      setUser(session?.user ?? null);
+      if (session?.user) {
+        syncProfile(session.user);
+      }
       setIsAuthReady(true);
     });
-    return () => unsubscribe();
+
+    // Listen for auth changes
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+      setUser(session?.user ?? null);
+      if (session?.user) {
+        syncProfile(session.user);
+      } else {
+        setProfile(null);
+        setItems([]);
+      }
+      setIsAuthReady(true);
+    });
+
+    return () => subscription.unsubscribe();
   }, []);
+
+  const syncProfile = async (supabaseUser: User) => {
+    try {
+      let userProfile = await getProfile(supabaseUser.id);
+      
+      if (!userProfile) {
+        // Create profile if it doesn't exist
+        userProfile = await createProfile({
+          id: supabaseUser.id,
+          full_name: supabaseUser.user_metadata.full_name || supabaseUser.user_metadata.name || 'User',
+          avatar_url: supabaseUser.user_metadata.avatar_url || 'https://picsum.photos/150',
+          email: supabaseUser.email || '',
+        });
+      }
+      
+      const mappedProfile: Profile = {
+        id: userProfile.id,
+        email: supabaseUser.email || '',
+        full_name: userProfile.full_name,
+        avatar_url: userProfile.avatar_url,
+        t_points: userProfile.t_points,
+        tier: userProfile.tier,
+        is_verified: userProfile.is_verified,
+        created_at: userProfile.created_at
+      };
+      
+      setProfile(mappedProfile);
+      
+      if (userProfile.role) {
+        setRole(userProfile.role as UserRole);
+      }
+
+      // Fetch items for this user if they are a lender or shop
+      const userItems = await getItems({ owner_id: supabaseUser.id });
+      setItems(userItems as Item[]);
+
+    } catch (error) {
+      console.error("Error syncing profile", error);
+    }
+  };
 
   useEffect(() => {
     const handleOnline = () => setIsOffline(false);
@@ -189,18 +218,6 @@ export default function App() {
     else setActiveTab('dashboard');
   };
 
-  // Map Firebase User to our Profile type
-  const profile: Profile = user ? {
-    id: user.uid,
-    email: user.email || '',
-    full_name: user.displayName || 'User',
-    avatar_url: user.photoURL || 'https://picsum.photos/150',
-    t_points: 100,
-    tier: 'BRONZE',
-    is_verified: false,
-    created_at: new Date().toISOString()
-  } : MOCK_PROFILE;
-
   if (!isAuthReady) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-background">
@@ -209,7 +226,7 @@ export default function App() {
     );
   }
 
-  if (!user) {
+  if (!user || !profile) {
     return <SignInScreen />;
   }
 
@@ -220,27 +237,27 @@ export default function App() {
 
     switch (role) {
       case UserRole.RENTER:
-        if (activeTab === 'home') return <RenterHomeScreen onItemSelect={handleItemSelect} />;
+        if (activeTab === 'home') return <RenterHomeScreen onItemClick={handleItemSelect} />;
         if (activeTab === 'bookings') return <MyRentalsScreen />;
         if (activeTab === 'profile') return <ProfileScreen user={profile} userRole={role} onRoleChange={switchRole} />;
-        return <RenterHomeScreen onItemSelect={handleItemSelect} />;
+        return <RenterHomeScreen onItemClick={handleItemSelect} />;
       case UserRole.LENDER:
         if (activeTab === 'dashboard') return <LenderDashboardScreen />;
-        if (activeTab === 'inventory') return <LenderInventoryScreen items={ITEMS} onAddItem={() => setIsAddingItem(true)} />;
+        if (activeTab === 'inventory') return <LenderInventoryScreen items={items} onAddItem={() => setIsAddingItem(true)} />;
         if (activeTab === 'requests') return <LenderRequestsScreen />;
         if (activeTab === 'profile') return <ProfileScreen user={profile} userRole={role} onRoleChange={switchRole} />;
         return <LenderDashboardScreen />;
       case UserRole.SHOP:
         if (activeTab === 'dashboard') return <ShopDashboardScreen onAddItem={() => setIsAddingItem(true)} />;
         if (activeTab === 'calendar') return <ShopCalendarScreen />;
-        if (activeTab === 'inventory') return <ShopInventoryScreen items={ITEMS} onAddItem={() => setIsAddingItem(true)} />;
+        if (activeTab === 'inventory') return <ShopInventoryScreen items={items} onAddItem={() => setIsAddingItem(true)} />;
         if (activeTab === 'profile') return <ProfileScreen user={profile} userRole={role} onRoleChange={switchRole} />;
         return <ShopDashboardScreen onAddItem={() => setIsAddingItem(true)} />;
       case UserRole.ADMIN:
         if (activeTab === 'profile') return <ProfileScreen user={profile} userRole={role} onRoleChange={switchRole} />;
         return <AdminDashboardScreen activeTab={activeTab} />;
       default:
-        return <RenterHomeScreen onItemSelect={handleItemSelect} />;
+        return <RenterHomeScreen onItemClick={handleItemSelect} />;
     }
   };
 

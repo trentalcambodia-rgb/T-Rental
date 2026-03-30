@@ -1,41 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Item, ItemCategory } from '../types';
-
-// --- MOCK SUPABASE RPC CALL ---
-const fetchNearbyItems = async (category: string | 'All', lat: number, long: number): Promise<Item[]> => {
-  await new Promise(resolve => setTimeout(resolve, 600));
-
-  const MOCK_DB: Item[] = [
-    {
-      id: '1', owner_id: 'u2', title: 'Honda Dream 2023', description: 'Perfect condition, includes 2 helmets.', category: ItemCategory.VEHICLE,
-      price_per_day: 8, currency: 'USD', image_url: 'https://images.unsplash.com/photo-1558981403-c5f9899a28bc?auto=format&fit=crop&w=800&q=80',
-      latitude: 11.5564, longitude: 104.9282, availability_status: 'AVAILABLE', rating_avg: 4.8, quantity: 2
-    },
-    {
-      id: '2', owner_id: 'u3', title: 'Canon 5D Mark IV', description: 'Body only. Good for wedding photography.', category: ItemCategory.ELECTRONICS,
-      price_per_day: 35, currency: 'USD', image_url: 'https://images.unsplash.com/photo-1516035069371-29a1b244cc32?auto=format&fit=crop&w=800&q=80',
-      latitude: 11.562, longitude: 104.91, availability_status: 'AVAILABLE', rating_avg: 5.0, quantity: 1
-    },
-    {
-      id: '3', owner_id: 'u4', title: 'Camping Set (4 Pax)', description: 'Tent, stove, chairs.', category: ItemCategory.OTHER,
-      price_per_day: 15, currency: 'USD', image_url: 'https://images.unsplash.com/photo-1523987355523-c7b5b0dd90a7?auto=format&fit=crop&w=800&q=80',
-      latitude: 11.55, longitude: 104.94, availability_status: 'AVAILABLE', rating_avg: 4.5, quantity: 3
-    },
-    {
-      id: '4', owner_id: 'u5', title: 'Traditional Khmer Dress', description: 'Wedding attire', category: ItemCategory.FASHION,
-      price_per_day: 12, currency: 'USD', image_url: 'https://images.unsplash.com/photo-1566231267800-449e794324f6?auto=format&fit=crop&w=800&q=80',
-      latitude: 11.558, longitude: 104.92, availability_status: 'AVAILABLE', rating_avg: 4.9, quantity: 1
-    },
-    {
-      id: '5', owner_id: 'u6', title: 'Drill Set (Makita)', description: 'Full set', category: ItemCategory.TOOLS,
-      price_per_day: 5, currency: 'USD', image_url: 'https://images.unsplash.com/photo-1504148455328-c376907d081c?auto=format&fit=crop&w=800&q=80',
-      latitude: 11.565, longitude: 104.925, availability_status: 'AVAILABLE', rating_avg: 4.2, quantity: 1
-    }
-  ];
-
-  if (category === 'All') return MOCK_DB;
-  return MOCK_DB.filter(i => i.category === category);
-};
+import { getItems } from '../src/lib/supabase';
 
 interface RenterHomeScreenProps {
   onItemClick?: (item: Item) => void;
@@ -50,10 +15,19 @@ export const RenterHomeScreen: React.FC<RenterHomeScreenProps> = ({ onItemClick 
   useEffect(() => {
     let mounted = true;
     setLoading(true);
-    // Mock Fetch
-    fetchNearbyItems(selectedCategory, 11.5564, 104.9282).then(data => {
-        if (mounted) { setItems(data); setLoading(false); }
-    });
+    
+    getItems({ category: selectedCategory })
+      .then(data => {
+        if (mounted) {
+          setItems(data as Item[]);
+          setLoading(false);
+        }
+      })
+      .catch(error => {
+        console.error("Error fetching items", error);
+        if (mounted) setLoading(false);
+      });
+      
     return () => { mounted = false; };
   }, [selectedCategory]);
 
