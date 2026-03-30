@@ -142,6 +142,14 @@ function AppContent() {
   console.log("AppContent Render:", { isAuthReady, user: user?.id, profile: profile?.id, role });
 
   useEffect(() => {
+    // Check if we are in a popup window that just completed OAuth
+    if (window.opener && window.location.hash.includes('access_token')) {
+      // Give Supabase a moment to process the token into localStorage
+      setTimeout(() => {
+        window.close();
+      }, 1500);
+    }
+
     let isMounted = true;
     
     // Safety timeout to prevent indefinite loading screen
