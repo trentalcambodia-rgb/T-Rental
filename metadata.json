@@ -1,0 +1,7 @@
+{
+  "name": "T-Rental Cambodia",
+  "description": "A trustless P2P sharing economy platform for Cambodia. Rent anything, anytime.",
+  "requestFramePermissions": [
+    "geolocation"
+  ]
+}

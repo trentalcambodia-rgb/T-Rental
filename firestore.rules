@@ -1,0 +1,88 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // ===============================================================
+    // Helper Functions
+    // ===============================================================
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+    function isOwner(userId) {
+      return isAuthenticated() && request.auth.uid == userId;
+    }
+    function isDocOwner() {
+      return isAuthenticated() && request.auth.uid == resource.data.owner_id;
+    }
+    function isRenter() {
+      return isAuthenticated() && request.auth.uid == resource.data.renter_id;
+    }
+    function hasOnlyAllowedFields(fields) {
+      return request.resource.data.keys().hasOnly(fields);
+    }
+    function isValidEmail(email) {
+      return email is string && email.matches("^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,}$");
+    }
+
+    // ===============================================================
+    // Domain Validators
+    // ===============================================================
+    function isValidProfile(data) {
+      return data.id is string && data.id.size() > 0 &&
+             data.email is string && isValidEmail(data.email) &&
+             data.full_name is string && data.full_name.size() > 0 &&
+             data.t_points is number && data.t_points >= 0 &&
+             data.tier in ['BRONZE', 'SILVER', 'GOLD'] &&
+             data.is_verified is bool &&
+             data.created_at is string;
+    }
+
+    function isValidItem(data) {
+      return data.id is string && data.id.size() > 0 &&
+             data.owner_id is string && data.owner_id.size() > 0 &&
+             data.title is string && data.title.size() > 0 &&
+             data.category is string &&
+             data.price_per_day is number && data.price_per_day >= 0 &&
+             data.currency in ['USD', 'KHR'] &&
+             data.image_url is string &&
+             data.latitude is number &&
+             data.longitude is number &&
+             data.availability_status in ['AVAILABLE', 'RENTED', 'MAINTENANCE'] &&
+             data.quantity is number && data.quantity >= 0 &&
+             data.rating_avg is number && data.rating_avg >= 0;
+    }
+
+    function isValidBooking(data) {
+      return data.id is string && data.id.size() > 0 &&
+             data.renter_id is string && data.renter_id.size() > 0 &&
+             data.item_id is string && data.item_id.size() > 0 &&
+             data.item_title is string && data.item_title.size() > 0 &&
+             data.start_date is string &&
+             data.end_date is string &&
+             data.total_price is number && data.total_price >= 0 &&
+             data.status is string &&
+             data.created_at is string;
+    }
+
+    // ===============================================================
+    // Rules
+    // ===============================================================
+    match /users/{userId} {
+      allow read: if isOwner(userId);
+      allow create: if isOwner(userId) && isValidProfile(request.resource.data);
+      allow update: if isOwner(userId) && isValidProfile(request.resource.data);
+    }
+
+    match /items/{itemId} {
+      allow read: if true;
+      allow create: if isAuthenticated() && request.auth.uid == request.resource.data.owner_id && isValidItem(request.resource.data);
+      allow update: if isDocOwner() && isValidItem(request.resource.data);
+      allow delete: if isDocOwner();
+    }
+
+    match /bookings/{bookingId} {
+      allow read: if isRenter() || (isAuthenticated() && exists(/databases/$(database)/documents/items/$(resource.data.item_id)) && get(/databases/$(database)/documents/items/$(resource.data.item_id)).data.owner_id == request.auth.uid);
+      allow create: if isAuthenticated() && request.auth.uid == request.resource.data.renter_id && isValidBooking(request.resource.data);
+      allow update: if (isRenter() || (isAuthenticated() && exists(/databases/$(database)/documents/items/$(resource.data.item_id)) && get(/databases/$(database)/documents/items/$(resource.data.item_id)).data.owner_id == request.auth.uid)) && isValidBooking(request.resource.data);
+    }
+  }
+}
