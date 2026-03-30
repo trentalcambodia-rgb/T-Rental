@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { BrowserRouter, Routes, Route, Navigate, useNavigate, useParams, useLocation } from 'react-router-dom';
 import { UserRole, Item, Profile, ItemCategory } from '../types';
 import { Layout } from '../components/Layout';
 import { RenterHomeScreen } from '../components/RenterHomeScreen';
@@ -17,6 +18,7 @@ import { supabase, signInWithGoogle, signOut as supabaseSignOut, getProfile, cre
 import { User, Session } from '@supabase/supabase-js';
 
 // --- SIGN IN SCREEN ---
+// ... (SignInScreen code remains same)
 const SignInScreen = () => {
   const [loading, setLoading] = useState(false);
 
@@ -120,10 +122,16 @@ const ProfileScreen = ({ user, userRole, onRoleChange }: { user: Profile, userRo
 };
 
 export default function App() {
+  return (
+    <BrowserRouter>
+      <AppContent />
+    </BrowserRouter>
+  );
+}
+
+function AppContent() {
+  const navigate = useNavigate();
   const [role, setRole] = useState<UserRole>(UserRole.RENTER);
-  const [activeTab, setActiveTab] = useState<string>('home');
-  const [selectedItem, setSelectedItem] = useState<Item | null>(null);
-  const [isAddingItem, setIsAddingItem] = useState(false);
   const [isOffline, setIsOffline] = useState(!navigator.onLine);
   
   const [user, setUser] = useState<User | null>(null);
@@ -131,29 +139,68 @@ export default function App() {
   const [isAuthReady, setIsAuthReady] = useState(false);
   const [items, setItems] = useState<Item[]>([]);
 
+  console.log("AppContent Render:", { isAuthReady, user: user?.id, profile: profile?.id, role });
+
   useEffect(() => {
+    let isMounted = true;
+    
+    // Safety timeout to prevent indefinite loading screen
+    const timeout = setTimeout(() => {
+      if (isMounted) {
+        console.warn("Auth check timed out, forcing ready state");
+        setIsAuthReady(true);
+      }
+    }, 5000);
+
     // Check current session
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      setUser(session?.user ?? null);
-      if (session?.user) {
-        syncProfile(session.user);
-      }
-      setIsAuthReady(true);
-    });
+    if (supabase) {
+      console.log("Supabase initialized, checking session...");
+      supabase.auth.getSession().then(({ data: { session }, error }) => {
+        clearTimeout(timeout);
+        if (!isMounted) return;
+        
+        if (error) {
+          console.error("Error getting session:", error);
+          setIsAuthReady(true);
+          return;
+        }
+        console.log("Session check complete:", session?.user?.id);
+        setUser(session?.user ?? null);
+        if (session?.user) {
+          syncProfile(session.user);
+        }
+        setIsAuthReady(true);
+      }).catch(err => {
+        clearTimeout(timeout);
+        if (!isMounted) return;
+        console.error("Fatal error in getSession:", err);
+        setIsAuthReady(true);
+      });
 
-    // Listen for auth changes
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
-      setUser(session?.user ?? null);
-      if (session?.user) {
-        syncProfile(session.user);
-      } else {
-        setProfile(null);
-        setItems([]);
-      }
-      setIsAuthReady(true);
-    });
+      // Listen for auth changes
+      const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+        console.log("Auth state changed:", _event, session?.user?.id);
+        if (!isMounted) return;
+        setUser(session?.user ?? null);
+        if (session?.user) {
+          syncProfile(session.user);
+        } else {
+          setProfile(null);
+          setItems([]);
+        }
+        setIsAuthReady(true);
+      });
 
-    return () => subscription.unsubscribe();
+      return () => {
+        isMounted = false;
+        subscription.unsubscribe();
+        clearTimeout(timeout);
+      };
+    } else {
+      console.warn("Supabase NOT initialized - check environment variables");
+      setIsAuthReady(true);
+      clearTimeout(timeout);
+    }
   }, []);
 
   const syncProfile = async (supabaseUser: User) => {
@@ -207,15 +254,9 @@ export default function App() {
     };
   }, []);
 
-  const handleItemSelect = (item: Item) => {
-    setSelectedItem(item);
-  };
-
   const switchRole = (newRole: UserRole) => {
     setRole(newRole);
-    if (newRole === UserRole.RENTER) setActiveTab('home');
-    else if (newRole === UserRole.ADMIN) setActiveTab('dashboard');
-    else setActiveTab('dashboard');
+    navigate('/');
   };
 
   if (!isAuthReady) {
@@ -230,58 +271,79 @@ export default function App() {
     return <SignInScreen />;
   }
 
-  const renderScreen = () => {
-    if (selectedItem) {
-      return <ItemDetailsScreen item={selectedItem} currentUser={profile} onBack={() => setSelectedItem(null)} onSuccess={() => setSelectedItem(null)} />;
-    }
-
-    switch (role) {
-      case UserRole.RENTER:
-        if (activeTab === 'home') return <RenterHomeScreen onItemClick={handleItemSelect} />;
-        if (activeTab === 'bookings') return <MyRentalsScreen />;
-        if (activeTab === 'profile') return <ProfileScreen user={profile} userRole={role} onRoleChange={switchRole} />;
-        return <RenterHomeScreen onItemClick={handleItemSelect} />;
-      case UserRole.LENDER:
-        if (activeTab === 'dashboard') return <LenderDashboardScreen />;
-        if (activeTab === 'inventory') return <LenderInventoryScreen items={items} onAddItem={() => setIsAddingItem(true)} />;
-        if (activeTab === 'requests') return <LenderRequestsScreen />;
-        if (activeTab === 'profile') return <ProfileScreen user={profile} userRole={role} onRoleChange={switchRole} />;
-        return <LenderDashboardScreen />;
-      case UserRole.SHOP:
-        if (activeTab === 'dashboard') return <ShopDashboardScreen onAddItem={() => setIsAddingItem(true)} />;
-        if (activeTab === 'calendar') return <ShopCalendarScreen />;
-        if (activeTab === 'inventory') return <ShopInventoryScreen items={items} onAddItem={() => setIsAddingItem(true)} />;
-        if (activeTab === 'profile') return <ProfileScreen user={profile} userRole={role} onRoleChange={switchRole} />;
-        return <ShopDashboardScreen onAddItem={() => setIsAddingItem(true)} />;
-      case UserRole.ADMIN:
-        if (activeTab === 'profile') return <ProfileScreen user={profile} userRole={role} onRoleChange={switchRole} />;
-        return <AdminDashboardScreen activeTab={activeTab} />;
-      default:
-        return <RenterHomeScreen onItemClick={handleItemSelect} />;
-    }
-  };
-
-  if (isAddingItem) {
-    if (role === UserRole.SHOP) {
-      return <ShopAddItemScreen onCancel={() => setIsAddingItem(false)} onSuccess={() => setIsAddingItem(false)} />;
-    }
-    if (role === UserRole.LENDER) {
-      return <LenderListingScreen currentUser={profile} onCancel={() => setIsAddingItem(false)} onSuccess={() => setIsAddingItem(false)} />;
-    }
-  }
-
   return (
-    <Layout 
-      activeTab={activeTab} 
-      onTabChange={setActiveTab} 
-      role={role}
-    >
+    <Layout role={role}>
       {isOffline && (
         <div className="bg-secondary text-white text-xs font-bold text-center py-2 px-2 absolute top-0 w-full z-50 animate-pulse">
           Offline Mode • Showing cached data
         </div>
       )}
-      {renderScreen()}
+      
+      <Routes>
+        {/* Renter Routes */}
+        {role === UserRole.RENTER && (
+          <>
+            <Route path="/" element={<RenterHomeScreen onItemClick={(item) => navigate(`/item/${item.id}`, { state: { item } })} />} />
+            <Route path="/bookings" element={<MyRentalsScreen />} />
+            <Route path="/item/:id" element={<ItemDetailsWrapper profile={profile} />} />
+          </>
+        )}
+
+        {/* Lender Routes */}
+        {role === UserRole.LENDER && (
+          <>
+            <Route path="/" element={<LenderDashboardScreen />} />
+            <Route path="/inventory" element={<LenderInventoryScreen items={items} onAddItem={() => navigate('/add-item')} />} />
+            <Route path="/requests" element={<LenderRequestsScreen />} />
+            <Route path="/add-item" element={<LenderListingScreen currentUser={profile} onCancel={() => navigate(-1)} onSuccess={() => navigate('/inventory')} />} />
+          </>
+        )}
+
+        {/* Shop Routes */}
+        {role === UserRole.SHOP && (
+          <>
+            <Route path="/" element={<ShopDashboardScreen onAddItem={() => navigate('/add-item')} />} />
+            <Route path="/calendar" element={<ShopCalendarScreen />} />
+            <Route path="/inventory" element={<ShopInventoryScreen items={items} onAddItem={() => navigate('/add-item')} />} />
+            <Route path="/add-item" element={<ShopAddItemScreen onCancel={() => navigate(-1)} onSuccess={() => navigate('/inventory')} />} />
+          </>
+        )}
+
+        {/* Admin Routes */}
+        {role === UserRole.ADMIN && (
+          <>
+            <Route path="/" element={<AdminDashboardScreen activeTab="dashboard" />} />
+            <Route path="/users" element={<AdminDashboardScreen activeTab="users" />} />
+            <Route path="/disputes" element={<AdminDashboardScreen activeTab="disputes" />} />
+          </>
+        )}
+
+        {/* Common Routes */}
+        <Route path="/profile" element={<ProfileScreen user={profile} userRole={role} onRoleChange={switchRole} />} />
+        
+        {/* Fallback */}
+        <Route path="*" element={<Navigate to="/" replace />} />
+      </Routes>
     </Layout>
+  );
+}
+
+// Helper to handle item details with route params
+function ItemDetailsWrapper({ profile }: { profile: Profile }) {
+  const { id } = useParams();
+  const navigate = useNavigate();
+  const location = useLocation();
+  const item = location.state?.item;
+
+  // In a real app, we would fetch the item by ID if not in state
+  if (!item) return <Navigate to="/" replace />;
+
+  return (
+    <ItemDetailsScreen 
+      item={item} 
+      currentUser={profile} 
+      onBack={() => navigate(-1)} 
+      onSuccess={() => navigate('/bookings')} 
+    />
   );
 }

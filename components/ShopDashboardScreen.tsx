@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Booking, BookingStatus } from '../types';
-import { getBookings, auth } from '../src/lib/supabase';
+import { getBookings, getCurrentUser } from '../src/lib/supabase';
 
 interface ShopDashboardScreenProps {
     onAddItem: () => void;
@@ -14,7 +14,7 @@ export const ShopDashboardScreen: React.FC<ShopDashboardScreenProps> = ({ onAddI
 
     useEffect(() => {
         const fetchDashboardData = async () => {
-            const user = auth.currentUser;
+            const user = await getCurrentUser();
             if (!user) return;
 
             try {

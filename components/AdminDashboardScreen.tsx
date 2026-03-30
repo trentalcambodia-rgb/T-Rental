@@ -1,6 +1,5 @@
 import React, { useState } from 'react';
 import { UserRole, Profile, Booking, BookingStatus } from '../types';
-import { motion } from 'motion/react';
 import { 
   Users, 
   ShieldCheck, 
@@ -9,8 +8,7 @@ import {
   Search, 
   Filter,
   MoreVertical,
-  CheckCircle2,
-  XCircle,
+  CircleCheck,
   ExternalLink
 } from 'lucide-react';
 
@@ -238,7 +236,7 @@ const UsersTab = ({ searchQuery, setSearchQuery }: { searchQuery: string, setSea
                 <td className="px-6 py-4">
                   {user.is_verified ? (
                     <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-green-50 text-green-700 text-[10px] font-bold border border-green-100">
-                      <CheckCircle2 className="w-3 h-3" />
+                      <CircleCheck className="w-3 h-3" />
                       Verified
                     </span>
                   ) : (

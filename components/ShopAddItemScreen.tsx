@@ -1,6 +1,6 @@
 import React, { useState, useRef } from 'react';
 import { ItemCategory, UserRole } from '../types';
-import { createItem, auth } from '../src/lib/supabase';
+import { createItem, getCurrentUser } from '../src/lib/supabase';
 
 interface ShopAddItemScreenProps {
   onCancel: () => void;
@@ -42,7 +42,7 @@ export const ShopAddItemScreen: React.FC<ShopAddItemScreenProps> = ({ onCancel, 
   const handleSubmit = async () => {
     if (!title || !price) return alert("Please fill in required fields");
     
-    const user = auth.currentUser;
+    const user = await getCurrentUser();
     if (!user) return alert("Please sign in to list items");
 
     setUploading(true);
@@ -57,8 +57,8 @@ export const ShopAddItemScreen: React.FC<ShopAddItemScreenProps> = ({ onCancel, 
         image_url: images[0] || `https://picsum.photos/seed/${title}/800/600`,
         availability_status: 'AVAILABLE',
         quantity: stock,
-        location_lat: 11.5564, // Default Phnom Penh
-        location_lng: 104.9282
+        latitude: 11.5564, // Default Phnom Penh
+        longitude: 104.9282
       });
       
       alert("Item Listed Successfully!");

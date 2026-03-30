@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Booking, BookingStatus } from '../types';
 import { BookingRequestCard, RenterRiskProfile } from './BookingRequestCard';
-import { getBookings, auth } from '../src/lib/supabase';
+import { getBookings, auth, getCurrentUser } from '../src/lib/supabase';
 
 // MOCK DATA for Renters (Typically fetched from DB)
 const MOCK_RENTERS: Record<string, RenterRiskProfile> = {
@@ -39,7 +39,7 @@ export const LenderRequestsScreen: React.FC = () => {
 
    useEffect(() => {
      const fetchRequests = async () => {
-       const user = auth.currentUser;
+       const user = await getCurrentUser();
        if (!user) return;
 
        try {

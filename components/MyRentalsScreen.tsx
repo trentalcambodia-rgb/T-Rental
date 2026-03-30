@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Booking, BookingStatus } from '../types';
-import { getBookings, auth } from '../src/lib/supabase';
+import { getBookings, getCurrentUser } from '../src/lib/supabase';
 
 type TabType = 'PENDING' | 'ACTIVE' | 'HISTORY';
 
@@ -11,7 +11,7 @@ export const MyRentalsScreen: React.FC = () => {
 
   useEffect(() => {
     const fetchBookings = async () => {
-      const user = auth.currentUser;
+      const user = await getCurrentUser();
       if (!user) return;
 
       try {
@@ -30,7 +30,7 @@ export const MyRentalsScreen: React.FC = () => {
   // Filter Logic
   const filteredBookings = bookings.filter(b => {
     if (activeTab === 'PENDING') return b.status === BookingStatus.REQUESTED;
-    if (activeTab === 'ACTIVE') return [BookingStatus.APPROVED, BookingStatus.PICKED_UP, BookingStatus.CONFIRMED].includes(b.status);
+    if (activeTab === 'ACTIVE') return [BookingStatus.APPROVED, BookingStatus.PICKED_UP].includes(b.status);
     if (activeTab === 'HISTORY') return [BookingStatus.COMPLETED, BookingStatus.RETURNED, BookingStatus.CANCELLED, BookingStatus.DISPUTED].includes(b.status);
     return false;
   });

@@ -1,39 +1,37 @@
 import React from 'react';
 import { UserRole } from '../types';
+import { useNavigate, useLocation } from 'react-router-dom';
 
 interface LayoutProps {
   children: React.ReactNode;
-  activeTab: string;
-  onTabChange: (tab: string) => void;
   role: UserRole;
 }
 
 const RENTER_TABS = [
-  { id: 'home', label: 'Explore', icon: 'compass' },
-  { id: 'map', label: 'Map', icon: 'map' },
-  { id: 'bookings', label: 'Trips', icon: 'calendar' },
-  { id: 'profile', label: 'Profile', icon: 'user' },
+  { id: 'home', label: 'Explore', icon: 'compass', path: '/' },
+  { id: 'bookings', label: 'Trips', icon: 'calendar', path: '/bookings' },
+  { id: 'profile', label: 'Profile', icon: 'user', path: '/profile' },
 ];
 
 const LENDER_TABS = [
-  { id: 'dashboard', label: 'Stats', icon: 'bar-chart' },
-  { id: 'inventory', label: 'My Items', icon: 'box' },
-  { id: 'requests', label: 'Requests', icon: 'bell' },
-  { id: 'profile', label: 'Profile', icon: 'user' },
+  { id: 'dashboard', label: 'Stats', icon: 'bar-chart', path: '/' },
+  { id: 'inventory', label: 'My Items', icon: 'box', path: '/inventory' },
+  { id: 'requests', label: 'Requests', icon: 'bell', path: '/requests' },
+  { id: 'profile', label: 'Profile', icon: 'user', path: '/profile' },
 ];
 
 const SHOP_TABS = [
-  { id: 'dashboard', label: 'Manage', icon: 'grid' },
-  { id: 'calendar', label: 'Calendar', icon: 'calendar-full' },
-  { id: 'inventory', label: 'Inventory', icon: 'box' },
-  { id: 'profile', label: 'Shop Info', icon: 'briefcase' },
+  { id: 'dashboard', label: 'Manage', icon: 'grid', path: '/' },
+  { id: 'calendar', label: 'Calendar', icon: 'calendar-full', path: '/calendar' },
+  { id: 'inventory', label: 'Inventory', icon: 'box', path: '/inventory' },
+  { id: 'profile', label: 'Shop Info', icon: 'profile', path: '/profile' },
 ];
 
 const ADMIN_TABS = [
-  { id: 'dashboard', label: 'Admin', icon: 'shield' },
-  { id: 'users', label: 'Users', icon: 'users' },
-  { id: 'disputes', label: 'Disputes', icon: 'alert' },
-  { id: 'profile', label: 'Profile', icon: 'user' },
+  { id: 'dashboard', label: 'Admin', icon: 'shield', path: '/' },
+  { id: 'users', label: 'Users', icon: 'users', path: '/users' },
+  { id: 'disputes', label: 'Disputes', icon: 'alert', path: '/disputes' },
+  { id: 'profile', label: 'Profile', icon: 'user', path: '/profile' },
 ];
 
 // Simple Icon implementation
@@ -53,7 +51,8 @@ const Icon = ({ name, active }: { name: string; active: boolean }) => {
     'calendar-full': <path d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2-2v12a2 2 0 002 2z" strokeLinecap="round" strokeLinejoin="round"/>,
     shield: <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" strokeLinecap="round" strokeLinejoin="round"/>,
     users: <path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2M9 7a4 4 0 100-8 4 4 0 000 8zm14 14v-2a4 4 0 00-3-3.87M16 3.13a4 4 0 010 7.75" strokeLinecap="round" strokeLinejoin="round"/>,
-    alert: <path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0zM12 9v4m0 4h.01" strokeLinecap="round" strokeLinejoin="round"/>
+    alert: <path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0zM12 9v4m0 4h.01" strokeLinecap="round" strokeLinejoin="round"/>,
+    profile: <path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2M12 11a4 4 0 100-8 4 4 0 000 8z" strokeLinecap="round" strokeLinejoin="round"/>
   };
 
   return (
@@ -63,7 +62,10 @@ const Icon = ({ name, active }: { name: string; active: boolean }) => {
   );
 }
 
-export const Layout: React.FC<LayoutProps> = ({ children, activeTab, onTabChange, role }) => {
+export const Layout: React.FC<LayoutProps> = ({ children, role }) => {
+  const navigate = useNavigate();
+  const location = useLocation();
+  
   let tabs = RENTER_TABS;
   if (role === UserRole.LENDER) tabs = LENDER_TABS;
   if (role === UserRole.SHOP) tabs = SHOP_TABS;
@@ -81,11 +83,11 @@ export const Layout: React.FC<LayoutProps> = ({ children, activeTab, onTabChange
       <nav className="bg-surface border-t border-gray-200 pb-safe pt-2 px-2 shadow-nav z-50">
         <div className="flex justify-around items-end w-full pb-3">
           {tabs.map((tab) => {
-            const isActive = activeTab === tab.id;
+            const isActive = location.pathname === tab.path;
             return (
               <button
                 key={tab.id}
-                onClick={() => onTabChange(tab.id)}
+                onClick={() => navigate(tab.path)}
                 className="flex flex-col items-center justify-center w-full group py-1"
               >
                 <div className={`

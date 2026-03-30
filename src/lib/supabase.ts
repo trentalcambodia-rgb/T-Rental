@@ -5,11 +5,28 @@ const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
 const supabaseKey = import.meta.env.VITE_SUPABASE_PUBLISHABLE_DEFAULT_KEY;
 
 if (!supabaseUrl || !supabaseKey) {
-  console.warn('Supabase URL or Key is missing. Please check your environment variables.');
+  console.error('Supabase URL or Key is missing. Please set VITE_SUPABASE_URL and VITE_SUPABASE_PUBLISHABLE_DEFAULT_KEY in your environment variables.');
+} else {
+  console.log("Supabase URL and Key found, initializing client...");
 }
 
-export const supabase = createClient(supabaseUrl || '', supabaseKey || '');
-export const auth = supabase.auth;
+// Ensure we have a valid URL before calling createClient to avoid the "Invalid supabaseUrl" error
+export const supabase = (supabaseUrl && supabaseKey) 
+  ? createClient(supabaseUrl, supabaseKey) 
+  : null;
+
+if (supabase) {
+  console.log("SUPABASE_CONNECTED");
+}
+
+export const auth = supabase?.auth;
+
+export const getCurrentUser = async () => {
+  if (!supabase) return null;
+  const { data: { user }, error } = await supabase.auth.getUser();
+  if (error) return null;
+  return user;
+};
 
 export const signInWithGoogle = async () => {
   const { data, error } = await supabase.auth.signInWithOAuth({
@@ -29,6 +46,7 @@ export const signOut = async () => {
 };
 
 export const getProfile = async (userId: string) => {
+  if (!supabase) return null;
   const { data, error } = await supabase
     .from('profiles')
     .select('*')
@@ -40,6 +58,7 @@ export const getProfile = async (userId: string) => {
 };
 
 export const createProfile = async (profile: { id: string; full_name: string; avatar_url: string; email: string }) => {
+  if (!supabase) return null;
   const { data, error } = await supabase
     .from('profiles')
     .upsert({
@@ -55,6 +74,7 @@ export const createProfile = async (profile: { id: string; full_name: string; av
 };
 
 export const getItems = async (filters?: { owner_id?: string; category?: string }) => {
+  if (!supabase) return [];
   let query = supabase.from('items').select('*');
   
   if (filters?.owner_id) {
@@ -72,6 +92,7 @@ export const getItems = async (filters?: { owner_id?: string; category?: string 
 };
 
 export const createItem = async (item: Partial<Item>) => {
+  if (!supabase) return null;
   const { data, error } = await supabase
     .from('items')
     .insert(item)
@@ -83,6 +104,7 @@ export const createItem = async (item: Partial<Item>) => {
 };
 
 export const getBookings = async (filters?: { renter_id?: string; owner_id?: string }) => {
+  if (!supabase) return [];
   let query = supabase.from('bookings').select('*, items(*)');
   
   if (filters?.renter_id) {
@@ -102,6 +124,7 @@ export const getBookings = async (filters?: { renter_id?: string; owner_id?: str
 };
 
 export const createBooking = async (booking: any) => {
+  if (!supabase) return null;
   const { data, error } = await supabase
     .from('bookings')
     .insert(booking)
