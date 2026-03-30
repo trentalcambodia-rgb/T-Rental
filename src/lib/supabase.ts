@@ -39,26 +39,10 @@ export const signInWithGoogle = async () => {
     provider: 'google',
     options: {
       redirectTo: window.location.origin,
-      skipBrowserRedirect: true, // Prevent iframe redirect
     },
   });
   
   if (error) throw error;
-  
-  if (data?.url) {
-    // Open the OAuth URL in a popup window
-    const width = 500;
-    const height = 600;
-    const left = window.screenX + (window.outerWidth - width) / 2;
-    const top = window.screenY + (window.outerHeight - height) / 2;
-    
-    window.open(
-      data.url,
-      'supabase-oauth',
-      `width=${width},height=${height},left=${left},top=${top},status=yes,scrollbars=yes`
-    );
-  }
-  
   return data;
 };
 

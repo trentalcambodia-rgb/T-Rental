@@ -138,18 +138,9 @@ function AppContent() {
   const [profile, setProfile] = useState<Profile | null>(null);
   const [isAuthReady, setIsAuthReady] = useState(false);
   const [items, setItems] = useState<Item[]>([]);
-
-  console.log("AppContent Render:", { isAuthReady, user: user?.id, profile: profile?.id, role });
+  const [needsRoleSelection, setNeedsRoleSelection] = useState(false);
 
   useEffect(() => {
-    // Check if we are in a popup window that just completed OAuth
-    if (window.opener && window.location.hash.includes('access_token')) {
-      // Give Supabase a moment to process the token into localStorage
-      setTimeout(() => {
-        window.close();
-      }, 1500);
-    }
-
     let isMounted = true;
     
     // Safety timeout to prevent indefinite loading screen
@@ -240,6 +231,9 @@ function AppContent() {
       
       if (userProfile.role) {
         setRole(userProfile.role as UserRole);
+        setNeedsRoleSelection(false);
+      } else {
+        setNeedsRoleSelection(true);
       }
 
       // Fetch items for this user if they are a lender or shop
@@ -277,6 +271,30 @@ function AppContent() {
 
   if (!user || !profile) {
     return <SignInScreen />;
+  }
+
+  if (needsRoleSelection) {
+    return (
+      <div className="min-h-screen bg-background flex flex-col items-center justify-center p-6 text-center">
+        <h1 className="text-2xl font-black text-gray-900 tracking-tight mb-8">Choose Your Role</h1>
+        <div className="grid grid-cols-1 gap-4 w-full max-w-xs">
+          {Object.values(UserRole).map((r) => (
+            <button
+              key={r}
+              onClick={async () => {
+                // In a real app, you would save this role to Supabase here
+                // await supabase.from('profiles').update({ role: r }).eq('id', user.id);
+                setRole(r);
+                setNeedsRoleSelection(false);
+              }}
+              className="w-full py-4 bg-white border border-gray-100 rounded-2xl font-bold text-gray-700 shadow-sm hover:bg-gray-50 transition-colors"
+            >
+              {r}
+            </button>
+          ))}
+        </div>
+      </div>
+    );
   }
 
   return (
