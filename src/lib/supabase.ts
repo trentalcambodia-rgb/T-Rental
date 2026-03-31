@@ -1,5 +1,6 @@
 import { createClient } from '@supabase/supabase-js';
 import { Item } from '../../types';
+import { handleSupabaseError } from './supabaseError';
 
 const rawUrl = import.meta.env.VITE_SUPABASE_URL;
 const rawKey = import.meta.env.VITE_SUPABASE_PUBLISHABLE_DEFAULT_KEY;
@@ -59,7 +60,7 @@ export const getProfile = async (userId: string) => {
     .eq('id', userId)
     .maybeSingle();
     
-  if (error) throw error;
+  if (error) handleSupabaseError(error, 'get', 'profiles');
   return data;
 };
 
@@ -75,7 +76,7 @@ export const createProfile = async (profile: { id: string; full_name: string; av
     .select()
     .single();
     
-  if (error) throw error;
+  if (error) handleSupabaseError(error, 'create', 'profiles');
   return data;
 };
 
@@ -93,7 +94,7 @@ export const getItems = async (filters?: { owner_id?: string; category?: string 
   
   const { data, error } = await query.order('created_at', { ascending: false });
   
-  if (error) throw error;
+  if (error) handleSupabaseError(error, 'list', 'items');
   return data;
 };
 
@@ -105,7 +106,7 @@ export const createItem = async (item: Partial<Item>) => {
     .select()
     .single();
     
-  if (error) throw error;
+  if (error) handleSupabaseError(error, 'create', 'items');
   return data;
 };
 
@@ -125,7 +126,7 @@ export const getBookings = async (filters?: { renter_id?: string; owner_id?: str
   
   const { data, error } = await query.order('created_at', { ascending: false });
   
-  if (error) throw error;
+  if (error) handleSupabaseError(error, 'list', 'bookings');
   return data;
 };
 
@@ -137,6 +138,6 @@ export const createBooking = async (booking: any) => {
     .select()
     .single();
     
-  if (error) throw error;
+  if (error) handleSupabaseError(error, 'create', 'bookings');
   return data;
 };

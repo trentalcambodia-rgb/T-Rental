@@ -68,13 +68,39 @@ const MOCK_DISPUTES: Booking[] = [
   }
 ];
 
+const MOCK_RENTALS: Booking[] = [
+  {
+    id: 'b1',
+    renter_id: 'u1',
+    item_id: 'i1',
+    item_title: 'Honda Dream 2023',
+    start_date: '2024-03-25',
+    end_date: '2024-03-27',
+    total_price: 24,
+    status: BookingStatus.REQUESTED,
+    created_at: '2024-03-24'
+  },
+  {
+    id: 'b2',
+    renter_id: 'u2',
+    item_id: 'i2',
+    item_title: 'MacBook Pro',
+    start_date: '2024-03-26',
+    end_date: '2024-03-28',
+    total_price: 100,
+    status: BookingStatus.APPROVED,
+    created_at: '2024-03-25'
+  }
+];
+
 export const AdminDashboardScreen: React.FC<{ activeTab?: string }> = ({ activeTab: layoutTab }) => {
-  const [internalTab, setInternalTab] = useState<'OVERVIEW' | 'USERS' | 'DISPUTES'>('OVERVIEW');
+  const [internalTab, setInternalTab] = useState<'OVERVIEW' | 'USERS' | 'DISPUTES' | 'RENTALS'>('OVERVIEW');
   const [searchQuery, setSearchQuery] = useState('');
 
   // Sync with layout tab if provided
   const currentTab = layoutTab === 'users' ? 'USERS' : 
                      layoutTab === 'disputes' ? 'DISPUTES' : 
+                     layoutTab === 'rentals' ? 'RENTALS' :
                      layoutTab === 'dashboard' ? 'OVERVIEW' : internalTab;
 
   return (
@@ -99,6 +125,11 @@ export const AdminDashboardScreen: React.FC<{ activeTab?: string }> = ({ activeT
               onClick={() => setInternalTab('USERS')} 
             />
             <TabButton 
+              label="Rentals" 
+              active={currentTab === 'RENTALS'} 
+              onClick={() => setInternalTab('RENTALS')} 
+            />
+            <TabButton 
               label="Disputes" 
               active={currentTab === 'DISPUTES'} 
               onClick={() => setInternalTab('DISPUTES')} 
@@ -110,6 +141,7 @@ export const AdminDashboardScreen: React.FC<{ activeTab?: string }> = ({ activeT
       <div className="px-6 max-w-7xl mx-auto">
         {currentTab === 'OVERVIEW' && <OverviewTab />}
         {currentTab === 'USERS' && <UsersTab searchQuery={searchQuery} setSearchQuery={setSearchQuery} />}
+        {currentTab === 'RENTALS' && <RentalsTab />}
         {currentTab === 'DISPUTES' && <DisputesTab />}
       </div>
     </div>
@@ -120,6 +152,20 @@ export const AdminDashboardScreen: React.FC<{ activeTab?: string }> = ({ activeT
 
 const OverviewTab = () => (
   <div className="space-y-8">
+    {/* Header Actions */}
+    <div className="flex justify-between items-center">
+      <h3 className="font-bold text-gray-900 text-xl">Dashboard Overview</h3>
+      <div className="flex gap-3">
+        <div className="flex items-center gap-2 bg-white px-4 py-2 rounded-xl border border-gray-200 shadow-sm">
+          <div className="w-2 h-2 rounded-full bg-green-500 animate-pulse" />
+          <span className="text-xs font-bold text-gray-600">System Healthy</span>
+        </div>
+        <button className="px-4 py-2 bg-white border border-gray-200 rounded-xl flex items-center gap-2 font-bold text-gray-700 hover:bg-gray-50 transition-colors shadow-sm text-sm">
+          Export Report
+        </button>
+      </div>
+    </div>
+
     {/* Stats Grid */}
     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
       <StatCard 
@@ -327,6 +373,66 @@ const DisputesTab = () => (
     </div>
   </div>
 );
+
+const RentalsTab = () => {
+  const [rentals, setRentals] = useState<Booking[]>(MOCK_RENTALS);
+
+  const handleAction = (id: string, status: BookingStatus) => {
+    setRentals(rentals.map(r => r.id === id ? { ...r, status } : r));
+  };
+
+  return (
+    <div className="bg-white rounded-3xl border border-gray-100 shadow-sm overflow-hidden">
+      <table className="w-full text-left border-collapse">
+        <thead>
+          <tr className="bg-gray-50 border-b border-gray-100">
+            <th className="px-6 py-4 text-xs font-bold text-gray-400 uppercase tracking-wider">Item</th>
+            <th className="px-6 py-4 text-xs font-bold text-gray-400 uppercase tracking-wider">Renter</th>
+            <th className="px-6 py-4 text-xs font-bold text-gray-400 uppercase tracking-wider">Dates</th>
+            <th className="px-6 py-4 text-xs font-bold text-gray-400 uppercase tracking-wider">Status</th>
+            <th className="px-6 py-4 text-xs font-bold text-gray-400 uppercase tracking-wider text-right">Actions</th>
+          </tr>
+        </thead>
+        <tbody className="divide-y divide-gray-50">
+          {rentals.map(rental => (
+            <tr key={rental.id} className="hover:bg-gray-50/50 transition-colors">
+              <td className="px-6 py-4 font-bold text-gray-900 text-sm">{rental.item_title}</td>
+              <td className="px-6 py-4 text-sm text-gray-500">{rental.renter_id}</td>
+              <td className="px-6 py-4 text-sm text-gray-500">{rental.start_date} - {rental.end_date}</td>
+              <td className="px-6 py-4">
+                <span className={`inline-flex items-center px-2.5 py-1 rounded-full text-[10px] font-bold border ${
+                  rental.status === BookingStatus.REQUESTED ? 'bg-yellow-50 text-yellow-700 border-yellow-100' :
+                  rental.status === BookingStatus.APPROVED ? 'bg-green-50 text-green-700 border-green-100' :
+                  'bg-gray-50 text-gray-700 border-gray-100'
+                }`}>
+                  {rental.status}
+                </span>
+              </td>
+              <td className="px-6 py-4 text-right">
+                {rental.status === BookingStatus.REQUESTED && (
+                  <div className="flex justify-end gap-2">
+                    <button 
+                      onClick={() => handleAction(rental.id, BookingStatus.APPROVED)}
+                      className="px-3 py-1 bg-green-600 text-white rounded-lg text-xs font-bold hover:bg-green-700"
+                    >
+                      Accept
+                    </button>
+                    <button 
+                      onClick={() => handleAction(rental.id, BookingStatus.CANCELLED)}
+                      className="px-3 py-1 bg-red-600 text-white rounded-lg text-xs font-bold hover:bg-red-700"
+                    >
+                      Cancel
+                    </button>
+                  </div>
+                )}
+              </td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+  );
+};
 
 // --- HELPERS ---
 

@@ -1,6 +1,5 @@
 import React, { useState, useRef } from 'react';
 import { ItemCategory, Profile } from '../types';
-import { createItem } from '../src/lib/supabase';
 
 interface LenderListingScreenProps {
   currentUser: Profile;
@@ -56,24 +55,14 @@ export const LenderListingScreen: React.FC<LenderListingScreenProps> = ({ curren
     setUploading(true);
 
     try {
-      await createItem({
-        owner_id: currentUser.id,
-        title,
-        description,
-        category,
-        price_per_day: parseFloat(price),
-        currency: 'USD',
-        image_url: images[0] || 'https://picsum.photos/seed/item/800/600',
-        availability_status: 'AVAILABLE',
-        quantity: 1,
-        latitude: 11.5564, // Default to Phnom Penh
-        longitude: 104.9282
-      });
+      // Logic to insert into Supabase would go here
+      // const blockedArray = Array.from(blockedDates);
+      // await supabase.from('items').insert({ ... })
       
+      await new Promise(resolve => setTimeout(resolve, 1500));
       alert("Item listed successfully!");
       onSuccess();
     } catch (e) {
-      console.error("Error listing item", e);
       alert("Error listing item");
     } finally {
       setUploading(false);
@@ -81,7 +70,7 @@ export const LenderListingScreen: React.FC<LenderListingScreenProps> = ({ curren
   };
 
   return (
-    <div className="bg-background min-h-full flex flex-col relative z-50 max-w-md sm:max-w-xl md:max-w-3xl lg:max-w-5xl xl:max-w-6xl mx-auto border-x border-gray-100 shadow-2xl">
+    <div className="bg-background min-h-full flex flex-col relative z-50">
       
       {/* Verify Modal Overlay */}
       {showVerifyModal && (
@@ -267,8 +256,8 @@ const SimpleWebCalendar = ({ blockedDates, onToggleDate }: { blockedDates: Set<s
             </div>
             
             <div className="grid grid-cols-7 text-center py-2 bg-gray-50/50">
-                {['S','M','T','W','T','F','S'].map((d, idx) => (
-                    <span key={`${d}-${idx}`} className="text-[10px] font-bold text-gray-400">{d}</span>
+                {['S','M','T','W','T','F','S'].map((d, i) => (
+                    <span key={`${d}-${i}`} className="text-[10px] font-bold text-gray-400">{d}</span>
                 ))}
             </div>
 

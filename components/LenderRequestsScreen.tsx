@@ -1,7 +1,6 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { Booking, BookingStatus } from '../types';
 import { BookingRequestCard, RenterRiskProfile } from './BookingRequestCard';
-import { getBookings, auth, getCurrentUser } from '../src/lib/supabase';
 
 // MOCK DATA for Renters (Typically fetched from DB)
 const MOCK_RENTERS: Record<string, RenterRiskProfile> = {
@@ -34,28 +33,31 @@ const MOCK_RENTERS: Record<string, RenterRiskProfile> = {
 };
 
 export const LenderRequestsScreen: React.FC = () => {
-   const [requests, setRequests] = useState<Booking[]>([]);
-   const [loading, setLoading] = useState(true);
-
-   useEffect(() => {
-     const fetchRequests = async () => {
-       const user = await getCurrentUser();
-       if (!user) return;
-
-       try {
-         // In a real app, we'd filter by owner_id on the server
-         const data = await getBookings();
-         // Filter for REQUESTED status
-         setRequests(data.filter(b => b.status === BookingStatus.REQUESTED));
-       } catch (error) {
-         console.error('Error fetching requests:', error);
-       } finally {
-         setLoading(false);
-       }
-     };
-
-     fetchRequests();
-   }, []);
+   // Initial Mock Requests
+   const [requests, setRequests] = useState<Booking[]>([
+    {
+      id: 'req_1',
+      renter_id: 'u_dara',
+      item_id: '1',
+      item_title: 'Honda Dream 2023',
+      start_date: new Date(Date.now() + 86400000).toISOString(),
+      end_date: new Date(Date.now() + 86400000 * 4).toISOString(),
+      total_price: 24,
+      status: BookingStatus.REQUESTED,
+      created_at: new Date().toISOString()
+    },
+    {
+      id: 'req_2',
+      renter_id: 'u_vibol',
+      item_id: '1',
+      item_title: 'Honda Dream 2023',
+      start_date: new Date(Date.now() + 86400000 * 10).toISOString(),
+      end_date: new Date(Date.now() + 86400000 * 12).toISOString(),
+      total_price: 16,
+      status: BookingStatus.REQUESTED,
+      created_at: new Date().toISOString()
+    }
+  ]);
 
   const removeRequest = (id: string) => {
     setRequests(prev => prev.filter(r => r.id !== id));
@@ -68,9 +70,9 @@ export const LenderRequestsScreen: React.FC = () => {
         <p className="text-xs text-gray-500 font-medium">Rental Requests ({requests.length})</p>
       </header>
 
-      <div className="p-4 grid grid-cols-1 md:grid-cols-2 gap-6">
+      <div className="p-4 space-y-4">
         {requests.length === 0 ? (
-            <div className="col-span-full text-center py-10 opacity-50">
+            <div className="text-center py-10 opacity-50">
             <div className="text-4xl mb-2">📭</div>
             <p className="font-bold text-gray-500">All caught up!</p>
             </div>

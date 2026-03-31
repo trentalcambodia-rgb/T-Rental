@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from 'react';
 import { Item, Profile, Booking, BookingStatus } from '../types';
-import { createBooking, getBookings } from '../src/lib/supabase';
 
 interface ItemDetailsScreenProps {
   item: Item;
@@ -9,19 +8,24 @@ interface ItemDetailsScreenProps {
   onSuccess: () => void;
 }
 
-// Function to fetch existing bookings for this item to block dates
+// Mock function to fetch existing bookings for this item to block dates
 const fetchItemBookings = async (itemId: string): Promise<string[]> => {
-  try {
-    // In a real app, we'd filter by item_id in the query
-    // For now, let's just use getBookings and filter manually if needed, 
-    // or better, add a specific query if we had it.
-    // Since I didn't add item_id filter to getBookings yet, I'll just return empty for now
-    // or I can update getBookings to support item_id.
-    return [];
-  } catch (error) {
-    console.error("Error fetching item bookings", error);
-    return [];
+  // Simulate network
+  await new Promise(resolve => setTimeout(resolve, 300));
+  
+  // Return array of ISO date strings that are booked
+  // Mocking that the item is booked 2 days from now for 3 days
+  const today = new Date();
+  const bookedStart = new Date(today); bookedStart.setDate(today.getDate() + 2);
+  const bookedEnd = new Date(today); bookedEnd.setDate(today.getDate() + 4);
+  
+  const blockedDates: string[] = [];
+  let curr = new Date(bookedStart);
+  while (curr <= bookedEnd) {
+    blockedDates.push(curr.toISOString().split('T')[0]);
+    curr.setDate(curr.getDate() + 1);
   }
+  return blockedDates;
 };
 
 export const ItemDetailsScreen: React.FC<ItemDetailsScreenProps> = ({ item, currentUser, onBack, onSuccess }) => {
@@ -55,7 +59,9 @@ export const ItemDetailsScreen: React.FC<ItemDetailsScreenProps> = ({ item, curr
     setIsSubmitting(true);
 
     try {
-      await createBooking({
+      // Mock Supabase Insertion
+      /*
+      const { error } = await supabase.from('bookings').insert({
         renter_id: currentUser.id,
         item_id: item.id,
         start_date: startDate.toISOString(),
@@ -63,11 +69,12 @@ export const ItemDetailsScreen: React.FC<ItemDetailsScreenProps> = ({ item, curr
         total_price: totalPrice,
         status: 'REQUESTED'
       });
-      
+      */
+     
+      await new Promise(resolve => setTimeout(resolve, 1500));
       alert("Request Sent! The owner will review it shortly.");
       onSuccess();
     } catch (e) {
-      console.error("Booking failed", e);
       alert("Booking failed.");
     } finally {
       setIsSubmitting(false);
@@ -75,7 +82,7 @@ export const ItemDetailsScreen: React.FC<ItemDetailsScreenProps> = ({ item, curr
   };
 
   return (
-    <div className="bg-background min-h-full flex flex-col relative z-50 animate-in slide-in-from-right duration-300 max-w-md sm:max-w-xl md:max-w-3xl lg:max-w-5xl xl:max-w-6xl mx-auto border-x border-gray-100 shadow-2xl">
+    <div className="bg-background min-h-full flex flex-col relative z-50 animate-in slide-in-from-right duration-300">
       
       {/* 1. Header with Image */}
       <div className="relative h-64 bg-gray-200">
@@ -163,7 +170,7 @@ export const ItemDetailsScreen: React.FC<ItemDetailsScreenProps> = ({ item, curr
       </div>
 
       {/* 3. Sticky Bottom Bar */}
-      <div className="fixed bottom-0 left-0 w-full bg-white border-t border-gray-100 p-4 pb-safe shadow-nav z-50 max-w-md sm:max-w-xl md:max-w-3xl lg:max-w-5xl xl:max-w-6xl mx-auto right-0">
+      <div className="fixed bottom-0 left-0 w-full bg-white border-t border-gray-100 p-4 pb-safe shadow-nav z-50 max-w-md mx-auto right-0">
         <div className="flex justify-between items-center mb-3">
            <div>
               <p className="text-xs text-gray-500 font-medium">Total Estimated</p>
@@ -280,7 +287,7 @@ const BookingRangeCalendar = ({
             </div>
             
             <div className="grid grid-cols-7 text-center mb-1">
-                {['S','M','T','W','T','F','S'].map((d, idx) => <span key={`${d}-${idx}`} className="text-[10px] text-gray-400 font-bold">{d}</span>)}
+                {['S','M','T','W','T','F','S'].map((d, i) => <span key={`${d}-${i}`} className="text-[10px] text-gray-400 font-bold">{d}</span>)}
             </div>
 
             <div className="grid grid-cols-7 gap-y-1">

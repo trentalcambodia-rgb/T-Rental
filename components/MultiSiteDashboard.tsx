@@ -112,7 +112,7 @@ export const MultiSiteDashboard: React.FC<{ onAddItem: () => void }> = ({ onAddI
                 {viewMode === 'MAP' ? (
                     <FleetMapView locations={MOCK_LOCATIONS} items={items} />
                 ) : (
-                    <div className="p-4 grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div className="p-4 space-y-3">
                         {filteredItems.map(item => {
                             const locationName = MOCK_LOCATIONS.find(l => l.id === item.current_shop_location_id)?.name || 'Unknown';
                             return (

@@ -1,6 +1,5 @@
 import React, { useState, useRef } from 'react';
 import { ItemCategory, UserRole } from '../types';
-import { createItem, getCurrentUser } from '../src/lib/supabase';
 
 interface ShopAddItemScreenProps {
   onCancel: () => void;
@@ -42,25 +41,47 @@ export const ShopAddItemScreen: React.FC<ShopAddItemScreenProps> = ({ onCancel, 
   const handleSubmit = async () => {
     if (!title || !price) return alert("Please fill in required fields");
     
-    const user = await getCurrentUser();
-    if (!user) return alert("Please sign in to list items");
-
     setUploading(true);
 
     try {
-      await createItem({
-        owner_id: user.id,
-        title,
-        description,
-        category,
-        price_per_day: parseFloat(price),
-        image_url: images[0] || `https://picsum.photos/seed/${title}/800/600`,
-        availability_status: 'AVAILABLE',
-        quantity: stock,
-        latitude: 11.5564, // Default Phnom Penh
-        longitude: 104.9282
-      });
+      // --- SUPABASE INTEGRATION LOGIC ---
+      /*
+      // 1. Upload Images
+      const imageUrls = [];
+      for (const imageFile of selectedFiles) {
+         const fileExt = imageFile.name.split('.').pop();
+         const fileName = `${Math.random()}.${fileExt}`;
+         const { data, error } = await supabase.storage
+            .from('item-images')
+            .upload(fileName, imageFile);
+         
+         if (data) {
+            const { data: { publicUrl } } = supabase.storage
+                .from('item-images')
+                .getPublicUrl(fileName);
+            imageUrls.push(publicUrl);
+         }
+      }
+
+      // 2. Insert Item
+      const { error } = await supabase
+        .from('items')
+        .insert({
+           owner_id: supabase.auth.user().id,
+           title: title,
+           description: description,
+           category: category,
+           price_per_day: parseFloat(price),
+           quantity: stock,
+           image_url: imageUrls[0], // Main image
+           availability_status: 'AVAILABLE',
+           is_instant_rent: instantRent, // Assuming field exists
+           condition_metadata: conditions // Assuming JSONB field
+        });
+      */
       
+      // Simulate network delay
+      await new Promise(resolve => setTimeout(resolve, 1500));
       alert("Item Listed Successfully!");
       onSuccess();
 
@@ -73,7 +94,7 @@ export const ShopAddItemScreen: React.FC<ShopAddItemScreenProps> = ({ onCancel, 
   };
 
   return (
-    <div className="bg-background min-h-full flex flex-col relative z-50 max-w-md sm:max-w-xl md:max-w-3xl lg:max-w-5xl xl:max-w-6xl mx-auto border-x border-gray-100 shadow-2xl">
+    <div className="bg-background min-h-full flex flex-col relative z-50">
       {/* Header */}
       <div className="bg-white px-4 py-4 flex justify-between items-center shadow-sm sticky top-0 z-10">
         <button onClick={onCancel} className="text-gray-500 font-medium">Cancel</button>

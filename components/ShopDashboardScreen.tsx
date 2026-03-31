@@ -1,6 +1,45 @@
 import React, { useState, useEffect } from 'react';
 import { Booking, BookingStatus } from '../types';
-import { getBookings, getCurrentUser } from '../src/lib/supabase';
+
+// Mock Data
+const MOCK_REQUESTS: Booking[] = [
+  {
+    id: 'b1',
+    renter_id: 'u5',
+    item_id: 'i1',
+    item_title: 'Honda Dream 2023',
+    start_date: new Date().toISOString(),
+    end_date: new Date(Date.now() + 86400000 * 3).toISOString(),
+    total_price: 24,
+    status: BookingStatus.REQUESTED,
+    created_at: new Date().toISOString()
+  },
+  {
+    id: 'b2',
+    renter_id: 'u6',
+    item_id: 'i2',
+    item_title: 'Canon 5D Mark IV',
+    start_date: new Date().toISOString(),
+    end_date: new Date(Date.now() + 86400000).toISOString(),
+    total_price: 35,
+    status: BookingStatus.REQUESTED,
+    created_at: new Date().toISOString()
+  }
+];
+
+const MOCK_RETURNING: Booking[] = [
+   {
+    id: 'b3',
+    renter_id: 'u7',
+    item_id: 'i3',
+    item_title: 'Camping Set',
+    start_date: new Date(Date.now() - 86400000 * 2).toISOString(),
+    end_date: new Date().toISOString(), // Today
+    total_price: 30,
+    status: BookingStatus.PICKED_UP, // Currently out, due back
+    created_at: new Date().toISOString()
+  }
+];
 
 interface ShopDashboardScreenProps {
     onAddItem: () => void;
@@ -8,29 +47,8 @@ interface ShopDashboardScreenProps {
 
 export const ShopDashboardScreen: React.FC<ShopDashboardScreenProps> = ({ onAddItem }) => {
     const [activeTab, setActiveTab] = useState<'requests' | 'handover'>('requests');
-    const [requests, setRequests] = useState<Booking[]>([]);
-    const [returning, setReturning] = useState<Booking[]>([]);
-    const [loading, setLoading] = useState(true);
-
-    useEffect(() => {
-        const fetchDashboardData = async () => {
-            const user = await getCurrentUser();
-            if (!user) return;
-
-            try {
-                const data = await getBookings();
-                // Filter for shop's items (ideally filtered on server)
-                setRequests(data.filter(b => b.status === BookingStatus.REQUESTED));
-                setReturning(data.filter(b => b.status === BookingStatus.PICKED_UP));
-            } catch (error) {
-                console.error('Error fetching dashboard data:', error);
-            } finally {
-                setLoading(false);
-            }
-        };
-
-        fetchDashboardData();
-    }, []);
+    const [requests, setRequests] = useState<Booking[]>(MOCK_REQUESTS);
+    const [returning, setReturning] = useState<Booking[]>(MOCK_RETURNING);
 
     const handleAccept = (id: string) => {
         alert(`Booking ${id} Accepted! Chat opened.`);
@@ -79,8 +97,8 @@ export const ShopDashboardScreen: React.FC<ShopDashboardScreenProps> = ({ onAddI
             </header>
 
             {/* 1. Summary Cards */}
-            <div className="px-6 py-6">
-                <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+            <div className="px-6 py-6 overflow-x-auto no-scrollbar">
+                <div className="flex gap-4 min-w-max">
                     <SummaryCard 
                         label="Pending" 
                         count={requests.length} 
@@ -119,10 +137,10 @@ export const ShopDashboardScreen: React.FC<ShopDashboardScreenProps> = ({ onAddI
             </div>
 
             {/* List View */}
-            <div className="p-4 grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="p-4 space-y-4">
                 {activeTab === 'requests' ? (
                     <>
-                        {requests.length === 0 && <div className="col-span-full"><EmptyState message="No new requests" /></div>}
+                        {requests.length === 0 && <EmptyState message="No new requests" />}
                         {requests.map(req => (
                             <RequestCard 
                                 key={req.id} 
@@ -134,9 +152,9 @@ export const ShopDashboardScreen: React.FC<ShopDashboardScreenProps> = ({ onAddI
                     </>
                 ) : (
                     <>
-                        {returning.length === 0 && <div className="col-span-full"><EmptyState message="No items scheduled for today" /></div>}
+                        {returning.length === 0 && <EmptyState message="No items scheduled for today" />}
                          {returning.length > 0 && (
-                            <h3 className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-2 ml-1 col-span-full">Returning Today</h3>
+                            <h3 className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-2 ml-1">Returning Today</h3>
                          )}
                         {returning.map(ret => (
                             <ReturnCard 

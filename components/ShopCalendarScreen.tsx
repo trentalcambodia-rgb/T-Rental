@@ -83,111 +83,104 @@ export const ShopCalendarScreen: React.FC = () => {
   });
 
   return (
-    <div className="bg-background min-h-full pb-20 flex flex-col lg:flex-row lg:gap-6 lg:p-6">
-      {/* Header - Hidden on desktop if using split layout, or integrated */}
-      <header className="bg-white pt-12 pb-4 px-6 shadow-sm border-b border-gray-100 sticky top-0 z-10 lg:hidden">
+    <div className="bg-background min-h-full pb-20 flex flex-col">
+      {/* Header */}
+      <header className="bg-white pt-12 pb-4 px-6 shadow-sm border-b border-gray-100 sticky top-0 z-10">
         <h1 className="text-2xl font-bold text-gray-900">Schedule</h1>
         <p className="text-xs text-gray-500 font-medium">Availability & Bookings</p>
       </header>
 
-      <div className="flex-1 flex flex-col lg:flex-row lg:gap-6">
-        {/* Calendar Control */}
-        <div className="bg-white p-4 mb-2 lg:mb-0 lg:rounded-3xl lg:shadow-sm lg:border lg:border-gray-100 lg:w-1/2 xl:w-2/5">
-          <div className="hidden lg:block mb-6">
-            <h1 className="text-2xl font-bold text-gray-900">Schedule</h1>
-            <p className="text-xs text-gray-500 font-medium">Availability & Bookings</p>
-          </div>
-
-          <div className="flex justify-between items-center mb-4">
-              <button onClick={handlePrevMonth} className="p-2 text-gray-400 hover:text-primary">◀</button>
-              <h2 className="font-bold text-lg text-gray-800">{monthNames[month]} {year}</h2>
-              <button onClick={handleNextMonth} className="p-2 text-gray-400 hover:text-primary">▶</button>
-          </div>
-
-          {/* Days Header */}
-          <div className="grid grid-cols-7 text-center mb-2">
-              {['S','M','T','W','T','F','S'].map((d, idx) => (
-                  <div key={`${d}-${idx}`} className="text-xs font-bold text-gray-400">{d}</div>
-              ))}
-          </div>
-
-          {/* Days Grid */}
-          <div className="grid grid-cols-7 gap-y-2">
-              {Array.from({ length: firstDayOfMonth }).map((_, i) => <div key={`empty-${i}`} />)}
-              
-              {Array.from({ length: daysInMonth }).map((_, i) => {
-                  const day = i + 1;
-                  const bookings = getBookingsForDay(day);
-                  const isSelected = selectedDate.getDate() === day && selectedDate.getMonth() === month && selectedDate.getFullYear() === year;
-                  const isToday = day === TODAY.getDate() && month === TODAY.getMonth() && year === TODAY.getFullYear();
-
-                  return (
-                      <div 
-                          key={day} 
-                          onClick={() => setSelectedDate(new Date(year, month, day))}
-                          className={`
-                              h-10 flex flex-col items-center justify-center rounded-lg relative cursor-pointer
-                              ${isSelected ? 'bg-primary text-white shadow-md' : 'text-gray-700 hover:bg-gray-50'}
-                              ${isToday && !isSelected ? 'border border-primary text-primary font-bold' : ''}
-                          `}
-                      >
-                          <span className="text-sm font-medium">{day}</span>
-                          {/* Status Dots */}
-                          <div className="flex gap-0.5 mt-0.5">
-                              {bookings.slice(0, 3).map((b, idx) => {
-                                  let dotColor = 'bg-gray-300';
-                                  if (b.status === BookingStatus.REQUESTED) dotColor = 'bg-orange-400';
-                                  if (b.status === BookingStatus.PICKED_UP || b.status === BookingStatus.APPROVED) dotColor = 'bg-green-400';
-                                  if (b.status === BookingStatus.RETURNED) dotColor = 'bg-gray-400';
-                                  
-                                  return <div key={idx} className={`w-1 h-1 rounded-full ${dotColor}`} />;
-                              })}
-                          </div>
-                      </div>
-                  );
-              })}
-          </div>
+      {/* Calendar Control */}
+      <div className="bg-white p-4 mb-2">
+        <div className="flex justify-between items-center mb-4">
+            <button onClick={handlePrevMonth} className="p-2 text-gray-400 hover:text-primary">◀</button>
+            <h2 className="font-bold text-lg text-gray-800">{monthNames[month]} {year}</h2>
+            <button onClick={handleNextMonth} className="p-2 text-gray-400 hover:text-primary">▶</button>
         </div>
 
-        {/* Selected Day Agenda */}
-        <div className="flex-1 bg-gray-50 p-4 lg:bg-white lg:rounded-3xl lg:shadow-sm lg:border lg:border-gray-100 lg:p-6">
-          <div className="flex justify-between items-center mb-4">
-              <h3 className="font-bold text-gray-800">
-                  {selectedDate.toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' })}
-              </h3>
-              <span className="text-xs font-bold bg-white border border-gray-200 px-2 py-1 rounded-full text-gray-500">
-                  {selectedBookings.length} Events
-              </span>
-          </div>
+        {/* Days Header */}
+        <div className="grid grid-cols-7 text-center mb-2">
+            {['S','M','T','W','T','F','S'].map((d, i) => (
+                <div key={`${d}-${i}`} className="text-xs font-bold text-gray-400">{d}</div>
+            ))}
+        </div>
 
-          <div className="space-y-3 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-1 gap-4 lg:gap-3">
-              {selectedBookings.length === 0 && (
-                  <div className="col-span-full text-center py-10 opacity-50">
-                      <p className="text-sm text-gray-500">No bookings for this day.</p>
-                      <button className="mt-2 text-primary text-xs font-bold">Block Date for Maintenance</button>
-                  </div>
-              )}
+        {/* Days Grid */}
+        <div className="grid grid-cols-7 gap-y-2">
+            {Array.from({ length: firstDayOfMonth }).map((_, i) => <div key={`empty-${i}`} />)}
+            
+            {Array.from({ length: daysInMonth }).map((_, i) => {
+                const day = i + 1;
+                const bookings = getBookingsForDay(day);
+                const isSelected = selectedDate.getDate() === day && selectedDate.getMonth() === month && selectedDate.getFullYear() === year;
+                const isToday = day === TODAY.getDate() && month === TODAY.getMonth() && year === TODAY.getFullYear();
 
-              {selectedBookings.map(booking => (
-                  <div key={booking.id} className="bg-white p-4 rounded-xl shadow-sm border-l-4 border-l-primary flex gap-4 lg:border lg:border-gray-100 lg:border-l-4">
-                      <div className="flex flex-col items-center justify-center px-2 border-r border-gray-100">
-                          <span className="text-[10px] text-gray-400 font-bold uppercase">Price</span>
-                          <span className="font-bold text-gray-900">${booking.total_price}</span>
-                      </div>
-                      <div className="flex-1">
-                          <div className="flex justify-between">
-                              <h4 className="font-bold text-gray-900 text-sm">{booking.item_title}</h4>
-                              <span className={`text-[10px] font-bold px-2 py-0.5 rounded ${getStatusColor(booking.status)}`}>
-                                  {booking.status}
-                              </span>
-                          </div>
-                          <p className="text-xs text-gray-500 mt-1">
-                              {new Date(booking.start_date).toLocaleDateString()} - {new Date(booking.end_date).toLocaleDateString()}
-                          </p>
-                      </div>
-                  </div>
-              ))}
-          </div>
+                return (
+                    <div 
+                        key={day} 
+                        onClick={() => setSelectedDate(new Date(year, month, day))}
+                        className={`
+                            h-10 flex flex-col items-center justify-center rounded-lg relative cursor-pointer
+                            ${isSelected ? 'bg-primary text-white shadow-md' : 'text-gray-700 hover:bg-gray-50'}
+                            ${isToday && !isSelected ? 'border border-primary text-primary font-bold' : ''}
+                        `}
+                    >
+                        <span className="text-sm font-medium">{day}</span>
+                        {/* Status Dots */}
+                        <div className="flex gap-0.5 mt-0.5">
+                            {bookings.slice(0, 3).map((b, idx) => {
+                                let dotColor = 'bg-gray-300';
+                                if (b.status === BookingStatus.REQUESTED) dotColor = 'bg-orange-400';
+                                if (b.status === BookingStatus.PICKED_UP || b.status === BookingStatus.APPROVED) dotColor = 'bg-green-400';
+                                if (b.status === BookingStatus.RETURNED) dotColor = 'bg-gray-400';
+                                
+                                return <div key={idx} className={`w-1 h-1 rounded-full ${dotColor}`} />;
+                            })}
+                        </div>
+                    </div>
+                );
+            })}
+        </div>
+      </div>
+
+      {/* Selected Day Agenda */}
+      <div className="flex-1 bg-gray-50 p-4">
+        <div className="flex justify-between items-center mb-4">
+            <h3 className="font-bold text-gray-800">
+                {selectedDate.toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' })}
+            </h3>
+            <span className="text-xs font-bold bg-white border border-gray-200 px-2 py-1 rounded-full text-gray-500">
+                {selectedBookings.length} Events
+            </span>
+        </div>
+
+        <div className="space-y-3">
+            {selectedBookings.length === 0 && (
+                <div className="text-center py-10 opacity-50">
+                    <p className="text-sm text-gray-500">No bookings for this day.</p>
+                    <button className="mt-2 text-primary text-xs font-bold">Block Date for Maintenance</button>
+                </div>
+            )}
+
+            {selectedBookings.map(booking => (
+                <div key={booking.id} className="bg-white p-4 rounded-xl shadow-sm border-l-4 border-l-primary flex gap-4">
+                    <div className="flex flex-col items-center justify-center px-2 border-r border-gray-100">
+                        <span className="text-[10px] text-gray-400 font-bold uppercase">Price</span>
+                        <span className="font-bold text-gray-900">${booking.total_price}</span>
+                    </div>
+                    <div className="flex-1">
+                        <div className="flex justify-between">
+                            <h4 className="font-bold text-gray-900 text-sm">{booking.item_title}</h4>
+                            <span className={`text-[10px] font-bold px-2 py-0.5 rounded ${getStatusColor(booking.status)}`}>
+                                {booking.status}
+                            </span>
+                        </div>
+                        <p className="text-xs text-gray-500 mt-1">
+                            {new Date(booking.start_date).toLocaleDateString()} - {new Date(booking.end_date).toLocaleDateString()}
+                        </p>
+                    </div>
+                </div>
+            ))}
         </div>
       </div>
     </div>

@@ -22,9 +22,9 @@ export const LenderDashboardScreen: React.FC = () => {
                 <p className="text-sm text-gray-500 font-medium mt-1">Overview of your rental business</p>
             </div>
             
-            <div className="px-6 grid grid-cols-1 lg:grid-cols-3 gap-8">
+            <div className="px-6">
                 {/* Earnings Card */}
-                <div className="lg:col-span-2 bg-primary rounded-3xl p-6 text-white shadow-xl shadow-indigo-900/20 relative overflow-hidden group">
+                <div className="bg-primary rounded-3xl p-6 text-white shadow-xl shadow-indigo-900/20 mb-8 relative overflow-hidden group">
                     <div className="absolute -right-6 -top-6 text-white opacity-10 text-9xl font-bold group-hover:scale-110 transition-transform duration-500">
                         $
                     </div>
@@ -42,22 +42,20 @@ export const LenderDashboardScreen: React.FC = () => {
                     </div>
                 </div>
                 
-                <div className="lg:col-span-1">
-                    <h3 className="font-bold text-gray-900 text-lg mb-4">Quick Actions</h3>
-                    <div className="grid grid-cols-2 lg:grid-cols-1 gap-4">
-                         <button className="bg-white p-5 rounded-2xl border border-gray-100 shadow-sm text-left active:bg-gray-50 active:scale-[0.98] transition-all group">
-                            <div className="w-10 h-10 bg-orange-50 rounded-full flex items-center justify-center mb-3 group-hover:bg-orange-100 transition-colors">
-                                <span className="text-xl">📅</span>
-                            </div>
-                            <span className="text-sm font-bold text-gray-800">Block Dates</span>
-                         </button>
-                         <button className="bg-white p-5 rounded-2xl border border-gray-100 shadow-sm text-left active:bg-gray-50 active:scale-[0.98] transition-all group">
-                            <div className="w-10 h-10 bg-yellow-50 rounded-full flex items-center justify-center mb-3 group-hover:bg-yellow-100 transition-colors">
-                                <span className="text-xl">⭐</span>
-                            </div>
-                            <span className="text-sm font-bold text-gray-800">My Reviews</span>
-                         </button>
-                    </div>
+                <h3 className="font-bold text-gray-900 text-lg mb-4">Quick Actions</h3>
+                <div className="grid grid-cols-2 gap-4">
+                     <button className="bg-white p-5 rounded-2xl border border-gray-100 shadow-sm text-left active:bg-gray-50 active:scale-[0.98] transition-all group">
+                        <div className="w-10 h-10 bg-orange-50 rounded-full flex items-center justify-center mb-3 group-hover:bg-orange-100 transition-colors">
+                            <span className="text-xl">📅</span>
+                        </div>
+                        <span className="text-sm font-bold text-gray-800">Block Dates</span>
+                     </button>
+                     <button className="bg-white p-5 rounded-2xl border border-gray-100 shadow-sm text-left active:bg-gray-50 active:scale-[0.98] transition-all group">
+                        <div className="w-10 h-10 bg-yellow-50 rounded-full flex items-center justify-center mb-3 group-hover:bg-yellow-100 transition-colors">
+                            <span className="text-xl">⭐</span>
+                        </div>
+                        <span className="text-sm font-bold text-gray-800">My Reviews</span>
+                     </button>
                 </div>
             </div>
         </div>

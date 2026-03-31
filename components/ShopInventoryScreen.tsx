@@ -40,9 +40,9 @@ export const ShopInventoryScreen: React.FC<ShopInventoryScreenProps> = ({ items,
       </div>
 
       {/* Inventory List */}
-      <div className="px-6 grid grid-cols-1 sm:grid-cols-2 gap-4">
+      <div className="px-6 space-y-4">
         {items.length === 0 && (
-            <div className="text-center py-20 opacity-50 col-span-full">
+            <div className="text-center py-20 opacity-50">
                 <p className="text-2xl mb-2">📦</p>
                 <p className="text-gray-500 font-bold">No items yet.</p>
                 <p className="text-xs text-gray-400">Add your first item to start earning.</p>

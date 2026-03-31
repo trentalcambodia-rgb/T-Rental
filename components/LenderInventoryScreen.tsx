@@ -22,9 +22,9 @@ export const LenderInventoryScreen: React.FC<LenderInventoryScreenProps> = ({ it
         </button>
       </header>
       
-      <div className="p-4 grid grid-cols-1 sm:grid-cols-2 gap-4">
+      <div className="p-4 space-y-4">
         {items.length === 0 ? (
-             <div className="text-center py-20 opacity-50 col-span-full">
+             <div className="text-center py-20 opacity-50">
                 <p className="text-4xl mb-2">📸</p>
                 <p className="font-bold text-gray-500">No items listed yet.</p>
                 <p className="text-xs text-gray-400">Start earning by listing your gear.</p>
