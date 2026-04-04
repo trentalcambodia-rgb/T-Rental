@@ -29,6 +29,13 @@ const SHOP_TABS = [
   { id: 'profile', label: 'Shop Info', icon: 'briefcase' },
 ];
 
+const ADMIN_TABS = [
+  { id: 'dashboard', label: 'Admin', icon: 'grid' },
+  { id: 'users', label: 'Users', icon: 'user' },
+  { id: 'rentals', label: 'Rentals', icon: 'calendar' },
+  { id: 'profile', label: 'Profile', icon: 'user' },
+];
+
 // Simple Icon implementation
 const Icon = ({ name, active }: { name: string; active: boolean }) => {
   const colorClass = active ? "stroke-primary stroke-[2.5px]" : "stroke-gray-400 stroke-2";
@@ -57,6 +64,7 @@ export const Layout: React.FC<LayoutProps> = ({ children, activeTab, onTabChange
   let tabs = RENTER_TABS;
   if (role === UserRole.LENDER) tabs = LENDER_TABS;
   if (role === UserRole.SHOP) tabs = SHOP_TABS;
+  if (role === UserRole.ADMIN) tabs = ADMIN_TABS;
 
   return (
     <div className="flex flex-col h-screen mx-auto bg-background border-x border-gray-200 relative shadow-2xl overflow-hidden font-sans w-full">

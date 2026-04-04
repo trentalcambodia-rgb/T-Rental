@@ -1,6 +1,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { Layout } from './components/Layout';
+import { AdminDashboardScreen } from './components/AdminDashboardScreen';
 import { ShopAddItemScreen } from './components/ShopAddItemScreen';
 import { LenderListingScreen } from './components/LenderListingScreen';
 import { ShopDashboardScreen } from './components/ShopDashboardScreen'; // Retaining for legacy/stats view reference
@@ -97,6 +98,15 @@ export default function App() {
   }
 
   const renderScreen = () => {
+    // --- ADMIN VIEWS ---
+    if (currentRole === UserRole.ADMIN) {
+      if (activeTab === 'dashboard') return <AdminDashboardScreen activeTab="dashboard" />;
+      if (activeTab === 'users') return <AdminDashboardScreen activeTab="users" />;
+      if (activeTab === 'rentals') return <AdminDashboardScreen activeTab="rentals" />;
+      if (activeTab === 'profile') return <ProfileScreen user={CURRENT_USER} role={currentRole} onSwitch={switchRole} />;
+      return <AdminDashboardScreen />;
+    }
+
     // --- LENDER VIEWS ---
     if (currentRole === UserRole.LENDER) {
       if (activeTab === 'dashboard') return <LenderDashboardScreen />;
@@ -178,7 +188,7 @@ const ProfileScreen = ({ user, role, onSwitch }: { user: Profile, role: UserRole
         <div className="bg-white p-4 rounded-2xl shadow-sm border border-gray-100">
             <p className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-3 ml-1">Switch Account Mode</p>
             <div className="grid grid-cols-3 gap-2">
-                {[UserRole.RENTER, UserRole.LENDER, UserRole.SHOP].map(r => (
+                {[UserRole.RENTER, UserRole.LENDER, UserRole.SHOP, UserRole.ADMIN].map(r => (
                     <button 
                         key={r}
                         onClick={() => onSwitch(r)}

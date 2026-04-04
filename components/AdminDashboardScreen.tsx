@@ -94,13 +94,14 @@ const MOCK_RENTALS: Booking[] = [
 ];
 
 export const AdminDashboardScreen: React.FC<{ activeTab?: string }> = ({ activeTab: layoutTab }) => {
-  const [internalTab, setInternalTab] = useState<'OVERVIEW' | 'USERS' | 'DISPUTES' | 'RENTALS'>('OVERVIEW');
+  const [internalTab, setInternalTab] = useState<'OVERVIEW' | 'USERS' | 'DISPUTES' | 'RENTALS' | 'DOCUMENTS'>('OVERVIEW');
   const [searchQuery, setSearchQuery] = useState('');
 
   // Sync with layout tab if provided
   const currentTab = layoutTab === 'users' ? 'USERS' : 
                      layoutTab === 'disputes' ? 'DISPUTES' : 
                      layoutTab === 'rentals' ? 'RENTALS' :
+                     layoutTab === 'documents' ? 'DOCUMENTS' :
                      layoutTab === 'dashboard' ? 'OVERVIEW' : internalTab;
 
   return (
@@ -134,6 +135,11 @@ export const AdminDashboardScreen: React.FC<{ activeTab?: string }> = ({ activeT
               active={currentTab === 'DISPUTES'} 
               onClick={() => setInternalTab('DISPUTES')} 
             />
+            <TabButton 
+              label="Documents" 
+              active={currentTab === 'DOCUMENTS'} 
+              onClick={() => setInternalTab('DOCUMENTS')} 
+            />
           </div>
         </div>
       </div>
@@ -143,6 +149,7 @@ export const AdminDashboardScreen: React.FC<{ activeTab?: string }> = ({ activeT
         {currentTab === 'USERS' && <UsersTab searchQuery={searchQuery} setSearchQuery={setSearchQuery} />}
         {currentTab === 'RENTALS' && <RentalsTab />}
         {currentTab === 'DISPUTES' && <DisputesTab />}
+        {currentTab === 'DOCUMENTS' && <DocumentsTab />}
       </div>
     </div>
   );
@@ -368,6 +375,31 @@ const DisputesTab = () => (
               Contact Parties
             </button>
           </div>
+        </div>
+      ))}
+    </div>
+  </div>
+);
+
+const DocumentsTab = () => (
+  <div className="space-y-6">
+    <h3 className="font-bold text-gray-900 text-xl">Document Requirements</h3>
+    <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+      {[
+        { title: 'Renter', docs: ['Government ID', 'Driver License', 'Proof of Address'] },
+        { title: 'Lender', docs: ['Government ID', 'Proof of Ownership', 'Bank Account Details'] },
+        { title: 'Shop', docs: ['Business License', 'Tax Registration', 'Shop Photos', 'Owner ID'] },
+      ].map(role => (
+        <div key={role.title} className="bg-white p-6 rounded-3xl border border-gray-100 shadow-sm">
+          <h4 className="font-bold text-gray-900 mb-4">{role.title} Requirements</h4>
+          <ul className="space-y-2">
+            {role.docs.map(doc => (
+              <li key={doc} className="flex items-center gap-2 text-sm text-gray-600">
+                <CircleCheck className="w-4 h-4 text-primary" />
+                {doc}
+              </li>
+            ))}
+          </ul>
         </div>
       ))}
     </div>
