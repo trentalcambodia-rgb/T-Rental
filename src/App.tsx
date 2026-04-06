@@ -14,112 +14,61 @@ import { ShopInventoryScreen } from '../components/ShopInventoryScreen';
 import { AdminDashboardScreen } from '../components/AdminDashboardScreen';
 import { ShopAddItemScreen } from '../components/ShopAddItemScreen';
 import { LenderListingScreen } from '../components/LenderListingScreen';
+import { Login } from '../components/Login';
 import { supabase, signInWithGoogle, signOut as supabaseSignOut, getProfile, createProfile, getItems } from './lib/supabase';
 import { User, Session } from '@supabase/supabase-js';
 
-// --- SIGN IN SCREEN ---
-// ... (SignInScreen code remains same)
-const SignInScreen = () => {
-  const [loading, setLoading] = useState(false);
-
-  const handleSignIn = async () => {
-    setLoading(true);
-    try {
-      await signInWithGoogle();
-    } catch (error) {
-      console.error("Sign in failed", error);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  return (
-    <div className="min-h-screen bg-background flex flex-col items-center justify-center p-6 text-center">
-      <div className="w-20 h-20 bg-primary rounded-3xl flex items-center justify-center shadow-2xl shadow-indigo-200 mb-8">
-        <svg className="w-10 h-10 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M13 10V3L4 14h7v7l9-11h-7z" />
-        </svg>
-      </div>
-      <h1 className="text-3xl font-black text-gray-900 tracking-tight mb-2">T-RENTAL</h1>
-      <p className="text-gray-500 mb-12 max-w-[280px]">The most trusted peer-to-peer rental marketplace in Cambodia.</p>
-      
-      <button 
-        onClick={handleSignIn}
-        disabled={loading}
-        className="w-full max-w-xs py-4 bg-white border border-gray-100 rounded-2xl font-bold text-gray-700 flex items-center justify-center gap-3 shadow-xl shadow-gray-100 active:scale-95 transition-all disabled:opacity-50"
-      >
-        <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" className="w-5 h-5" alt="Google" />
-        {loading ? 'Connecting...' : 'Continue with Google'}
-      </button>
-      
-      <p className="mt-8 text-xs text-gray-400 px-8">
-        By continuing, you agree to our <span className="underline">Terms of Service</span> and <span className="underline">Privacy Policy</span>.
-      </p>
-    </div>
-  );
-};
-
 // Simple Profile Screen since it was missing
-const ProfileScreen = ({ user, userRole, onRoleChange }: { user: Profile, userRole: UserRole, onRoleChange: (role: UserRole) => void }) => {
-  const handleLogout = async () => {
-    try {
-      await supabaseSignOut();
-    } catch (error) {
-      console.error("Logout failed", error);
-    }
-  };
-
+const ProfileScreen = ({ user, userRole, onRoleChange, onLogout }: { user: Profile, userRole: UserRole, onRoleChange: (role: UserRole) => void, onLogout: () => void }) => {
   return (
-    <div className="p-6 pt-12">
-      <h1 className="text-2xl font-bold mb-6">Profile</h1>
-      <div className="bg-white rounded-2xl p-6 border border-gray-100 shadow-sm mb-6">
-        <div className="flex items-center gap-4 mb-6">
-          <div className="w-16 h-16 bg-primary/10 rounded-full flex items-center justify-center text-primary text-2xl font-bold overflow-hidden">
-            <img src={user.avatar_url} alt={user.full_name} className="w-full h-full object-cover" />
+    <div className="pb-10 bg-background">
+      {/* Clean White Header */}
+      <div className="bg-white pt-12 pb-8 px-6 border-b border-gray-100 flex flex-col items-center">
+          <div className="w-24 h-24 rounded-full p-1 bg-gray-100 mb-4">
+              <img src={user.avatar_url} alt={user.full_name} className="w-full h-full object-cover rounded-full" />
           </div>
-          <div>
-            <h2 className="text-lg font-bold">{user.full_name}</h2>
-            <p className="text-sm text-gray-500">{user.email}</p>
+          <h2 className="text-xl font-bold text-gray-900">{user.full_name}</h2>
+          <p className="text-gray-500 text-sm mb-4">{user.email}</p>
+          
+          <div className="flex gap-4">
+               <div className="text-center px-4 py-2 bg-gray-50 rounded-xl border border-gray-100">
+                  <p className="text-lg font-bold text-primary">{user.t_points}</p>
+                  <p className="text-[10px] text-gray-400 font-bold uppercase">Score</p>
+               </div>
+               <div className="text-center px-4 py-2 bg-gray-50 rounded-xl border border-gray-100">
+                  <p className="text-lg font-bold text-primary">{user.is_verified ? 'Yes' : 'No'}</p>
+                  <p className="text-[10px] text-gray-400 font-bold uppercase">Verified</p>
+               </div>
           </div>
-        </div>
-        
-        <div className="space-y-4">
-          <h3 className="text-sm font-bold text-gray-400 uppercase tracking-wider">Switch Role</h3>
-          <div className="grid grid-cols-2 gap-3">
-            {Object.values(UserRole).map((role) => (
-              <button
-                key={role}
-                onClick={() => onRoleChange(role)}
-                className={`py-3 rounded-xl font-bold text-sm transition-all border ${
-                  userRole === role 
-                    ? 'bg-primary text-white border-primary shadow-lg shadow-indigo-100' 
-                    : 'bg-white text-gray-600 border-gray-100 hover:bg-gray-50'
-                }`}
-              >
-                {role}
-              </button>
-            ))}
-          </div>
-        </div>
       </div>
-      
-      <div className="space-y-3">
-        <button className="w-full py-4 bg-white border border-gray-100 rounded-2xl font-bold text-gray-700 text-left px-6 shadow-sm">
-          Account Settings
-        </button>
-        <button className="w-full py-4 bg-white border border-gray-100 rounded-2xl font-bold text-gray-700 text-left px-6 shadow-sm">
-          Verification Status
-        </button>
-        <button 
-          onClick={handleLogout}
-          className="w-full py-4 bg-white border border-gray-100 rounded-2xl font-bold text-red-500 text-left px-6 shadow-sm active:bg-red-50 transition-colors"
-        >
-          Logout
-        </button>
+
+      <div className="px-6 mt-6 space-y-6">
+          <div>
+              <h3 className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-2 ml-1">Account</h3>
+              <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
+                  <ProfileLink icon="🆔" label="Identity Verification" status={user.is_verified ? 'Verified' : 'Required'} />
+                  <ProfileLink icon="💳" label="Payment Methods" />
+                  <ProfileLink icon="🌍" label="Language" value="English" />
+              </div>
+          </div>
+          
+          <button onClick={onLogout} className="w-full py-3 text-red-600 font-bold text-sm bg-white border border-red-100 rounded-xl">
+              Log Out
+          </button>
       </div>
     </div>
   );
 };
+
+const ProfileLink = ({ icon, label, value, status }: { icon: string, label: string, value?: string, status?: string }) => (
+  <div className="flex items-center p-4 border-b border-gray-100 last:border-0 hover:bg-gray-50 cursor-pointer">
+    <span className="mr-3 text-lg">{icon}</span>
+    <span className="flex-1 font-semibold text-gray-700 text-sm">{label}</span>
+    {value && <span className="text-xs text-gray-400 font-medium mr-2">{value}</span>}
+    {status && <span className={`text-xs font-bold mr-2 ${status === 'Verified' ? 'text-green-500' : 'text-orange-500'}`}>{status}</span>}
+    <span className="text-gray-300">›</span>
+  </div>
+);
 
 export default function App() {
   return (
@@ -182,7 +131,7 @@ function AppContent() {
         if (!isMounted) return;
         setUser(session?.user ?? null);
         if (session?.user) {
-          syncProfile(session.user);
+          syncProfile(session.user, _event === 'SIGNED_IN');
         } else {
           setProfile(null);
           setItems([]);
@@ -202,7 +151,7 @@ function AppContent() {
     }
   }, []);
 
-  const syncProfile = async (supabaseUser: User) => {
+  const syncProfile = async (supabaseUser: User, isLoginEvent: boolean = false) => {
     try {
       let userProfile = await getProfile(supabaseUser.id);
       
@@ -210,8 +159,8 @@ function AppContent() {
         // Create profile if it doesn't exist
         userProfile = await createProfile({
           id: supabaseUser.id,
-          full_name: supabaseUser.user_metadata.full_name || supabaseUser.user_metadata.name || 'User',
-          avatar_url: supabaseUser.user_metadata.avatar_url || 'https://picsum.photos/150',
+          full_name: supabaseUser.user_metadata?.full_name || supabaseUser.user_metadata?.name || 'User',
+          avatar_url: supabaseUser.user_metadata?.avatar_url || supabaseUser.user_metadata?.picture || 'https://picsum.photos/150',
           email: supabaseUser.email || '',
         });
       }
@@ -219,11 +168,11 @@ function AppContent() {
       const mappedProfile: Profile = {
         id: userProfile.id,
         email: supabaseUser.email || '',
-        full_name: userProfile.full_name,
-        avatar_url: userProfile.avatar_url,
-        t_points: userProfile.t_points,
-        tier: userProfile.tier,
-        is_verified: userProfile.is_verified,
+        full_name: userProfile.full_name || supabaseUser.user_metadata?.full_name || supabaseUser.user_metadata?.name || 'User',
+        avatar_url: userProfile.avatar_url || supabaseUser.user_metadata?.avatar_url || supabaseUser.user_metadata?.picture || 'https://picsum.photos/150',
+        t_points: userProfile.t_points || 0,
+        tier: userProfile.tier || 'BRONZE',
+        is_verified: userProfile.is_verified || false,
         created_at: userProfile.created_at
       };
       
@@ -231,9 +180,12 @@ function AppContent() {
       
       if (userProfile.role) {
         setRole(userProfile.role as UserRole);
-        setNeedsRoleSelection(false);
-      } else {
+      }
+      
+      if (isLoginEvent || !userProfile.role) {
         setNeedsRoleSelection(true);
+      } else {
+        setNeedsRoleSelection(false);
       }
 
       // Fetch items for this user if they are a lender or shop
@@ -261,6 +213,17 @@ function AppContent() {
     navigate('/');
   };
 
+  const handleLogout = async () => {
+    try {
+      console.log("Attempting to log out...");
+      await supabaseSignOut();
+      console.log("Logout successful");
+      navigate('/');
+    } catch (error) {
+      console.error("Logout failed", error);
+    }
+  };
+
   if (!isAuthReady) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-background">
@@ -269,31 +232,22 @@ function AppContent() {
     );
   }
 
-  if (!user || !profile) {
-    return <SignInScreen />;
-  }
-
-  if (needsRoleSelection) {
+  if (!user || !profile || needsRoleSelection) {
     return (
-      <div className="min-h-screen bg-background flex flex-col items-center justify-center p-6 text-center">
-        <h1 className="text-2xl font-black text-gray-900 tracking-tight mb-8">Choose Your Role</h1>
-        <div className="grid grid-cols-1 gap-4 w-full max-w-xs">
-          {Object.values(UserRole).map((r) => (
-            <button
-              key={r}
-              onClick={async () => {
-                // In a real app, you would save this role to Supabase here
-                // await supabase.from('profiles').update({ role: r }).eq('id', user.id);
-                setRole(r);
-                setNeedsRoleSelection(false);
-              }}
-              className="w-full py-4 bg-white border border-gray-100 rounded-2xl font-bold text-gray-700 shadow-sm hover:bg-gray-50 transition-colors"
-            >
-              {r}
-            </button>
-          ))}
-        </div>
-      </div>
+      <Login 
+        user={user} 
+        onRoleSelect={async (r) => {
+          if (user) {
+            try {
+              await supabase.from('profiles').update({ role: r }).eq('id', user.id);
+            } catch (error) {
+              console.error("Failed to save role", error);
+            }
+          }
+          setRole(r);
+          setNeedsRoleSelection(false);
+        }} 
+      />
     );
   }
 
@@ -345,7 +299,7 @@ function AppContent() {
         )}
 
         {/* Common Routes */}
-        <Route path="/profile" element={<ProfileScreen user={profile} userRole={role} onRoleChange={switchRole} />} />
+        <Route path="/profile" element={<ProfileScreen user={profile} userRole={role} onRoleChange={switchRole} onLogout={handleLogout} />} />
         
         {/* Fallback */}
         <Route path="*" element={<Navigate to="/" replace />} />

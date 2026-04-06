@@ -48,6 +48,7 @@ export const signInWithGoogle = async () => {
 };
 
 export const signOut = async () => {
+  if (!supabase) return;
   const { error } = await supabase.auth.signOut();
   if (error) throw error;
 };
