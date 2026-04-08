@@ -8,7 +8,7 @@ export const LenderDashboardScreen: React.FC = () => {
             <div className="px-6 mb-8">
                 <div className="flex items-center justify-between mb-6">
                      <div className="flex items-center gap-2.5">
-                        <div className="w-9 h-9 bg-primary rounded-xl flex items-center justify-center shadow-lg shadow-indigo-900/20">
+                        <div className="w-9 h-9 bg-primary rounded-xl flex items-center justify-center shadow-lg shadow-primary/20">
                              <svg className="w-5 h-5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M13 10V3L4 14h7v7l9-11h-7z" />
                              </svg>
@@ -24,11 +24,11 @@ export const LenderDashboardScreen: React.FC = () => {
             
             <div className="px-6">
                 {/* Earnings Card */}
-                <div className="bg-primary rounded-3xl p-6 text-white shadow-xl shadow-indigo-900/20 mb-8 relative overflow-hidden group">
+                <div className="bg-primary rounded-3xl p-6 text-white shadow-xl shadow-primary/20 mb-8 relative overflow-hidden group">
                     <div className="absolute -right-6 -top-6 text-white opacity-10 text-9xl font-bold group-hover:scale-110 transition-transform duration-500">
                         $
                     </div>
-                    <p className="text-indigo-200 text-sm font-bold mb-2 uppercase tracking-wider">Total Earnings</p>
+                    <p className="text-blue-200 text-sm font-bold mb-2 uppercase tracking-wider">Total Earnings</p>
                     <div className="flex items-baseline gap-1 mb-6 relative z-10">
                         <span className="text-5xl font-bold tracking-tight">$145</span>
                         <span className="text-2xl opacity-60 font-medium">.00</span>

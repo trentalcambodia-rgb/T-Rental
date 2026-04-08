@@ -72,7 +72,7 @@ export const ShopDashboardScreen: React.FC<ShopDashboardScreenProps> = ({ onAddI
             <header className="bg-white pt-12 pb-6 px-6 shadow-sm border-b border-gray-100 sticky top-0 z-10">
                 <div className="flex justify-between items-center mb-6">
                     <div className="flex items-center gap-2.5">
-                        <div className="w-9 h-9 bg-primary rounded-xl flex items-center justify-center shadow-lg shadow-indigo-900/20">
+                        <div className="w-9 h-9 bg-primary rounded-xl flex items-center justify-center shadow-lg shadow-primary/20">
                              <svg className="w-5 h-5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M13 10V3L4 14h7v7l9-11h-7z" />
                              </svg>
@@ -114,7 +114,7 @@ export const ShopDashboardScreen: React.FC<ShopDashboardScreenProps> = ({ onAddI
                     <SummaryCard 
                         label="Returning Today" 
                         count={returning.length} 
-                        color="bg-indigo-500" 
+                        color="bg-primary" 
                         icon="🔙"
                     />
                 </div>
@@ -213,7 +213,7 @@ const RequestCard: React.FC<RequestCardProps> = ({ booking, onAccept, onDecline 
             <div className="flex-1 min-w-0">
                 <div className="flex justify-between items-start">
                     <h3 className="font-bold text-gray-900 truncate pr-2 text-sm">{booking.item_title}</h3>
-                    <span className="text-primary font-bold text-sm bg-indigo-50 px-2 py-0.5 rounded-lg">${booking.total_price}</span>
+                    <span className="text-primary font-bold text-sm bg-primary/10 px-2 py-0.5 rounded-lg">${booking.total_price}</span>
                 </div>
                 <div className="flex items-center gap-2 mt-2">
                     <div className="w-5 h-5 rounded-full bg-gray-200 overflow-hidden border border-white shadow-sm">
@@ -253,9 +253,9 @@ interface ReturnCardProps {
 }
 
 const ReturnCard: React.FC<ReturnCardProps> = ({ booking, onVerify }) => (
-    <div className="bg-white rounded-2xl p-4 shadow-sm border-l-4 border-indigo-500">
+    <div className="bg-white rounded-2xl p-4 shadow-sm border-l-4 border-primary">
         <div className="flex justify-between items-center mb-3">
-            <span className="text-[10px] font-bold text-indigo-600 uppercase bg-indigo-50 px-2 py-1 rounded border border-indigo-100">Due: Today, 5:00 PM</span>
+            <span className="text-[10px] font-bold text-primary uppercase bg-primary/10 px-2 py-1 rounded border border-primary/20">Due: Today, 5:00 PM</span>
             <span className="text-xs text-gray-400 font-mono">#{booking.id.slice(0,4)}</span>
         </div>
         <div className="flex gap-4 items-center">

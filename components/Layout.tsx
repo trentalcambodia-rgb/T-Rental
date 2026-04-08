@@ -87,7 +87,7 @@ export const Layout: React.FC<LayoutProps> = ({ children, activeTab, onTabChange
               >
                 <div className={`
                     p-1.5 rounded-full mb-1 transition-all duration-300 
-                    ${isActive ? 'bg-indigo-50 transform -translate-y-1' : ''}
+                    ${isActive ? 'bg-primary/10 transform -translate-y-1' : ''}
                 `}>
                     <Icon name={tab.icon} active={isActive} />
                 </div>
